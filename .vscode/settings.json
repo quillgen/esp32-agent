@@ -1,0 +1,15 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32s3"
+  },
+  "idf.openOcdConfigs": [
+    "board/esp32s3-builtin.cfg"
+  ],
+  "idf.port": "/dev/tty.usbmodem14201",
+  "idf.flashType": "UART",
+  "idf.pythonInstallPath": "/opt/miniconda3/bin/python",
+  "files.associations": {
+    "esp_chip_info.h": "c"
+  }
+}
