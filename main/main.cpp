@@ -1,20 +1,76 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "driver/gpio.h"
-#include "esp_log.h"
-#include "led_strip.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <driver/gpio.h>
+#include <driver/i2s.h>
+#include <esp_log.h>
+#include <led_strip.h>
+
 #include "sdkconfig.h"
 #include "fast_hsv2rgb.h"
+#include "wav.h"
 
 static const char *TAG = "example";
 
 // see: https://github.com/espressif/esp-idf/issues/12592#issuecomment-1817343243
 #define BLINK_GPIO (gpio_num_t) CONFIG_BLINK_GPIO
+#define I2S_BCLK 15
+#define I2S_LRC 16
+#define I2S_DOUT 7
+
+const float PI = 3.14159265f;
+const float HUE_SPEED = 3.0f;      // 色相变化速度（度/循环周期）
+const float BREATHE_SPEED = 0.03f; // 呼吸速度（相位增量/循环周期）
 
 static led_strip_handle_t led_strip;
+
+static void configure_speaker()
+{
+    i2s_config_t i2s_config = {
+        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+        .sample_rate = 44100,
+        .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+        .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+        .intr_alloc_flags = 0,
+        .dma_buf_count = 8,
+        .dma_buf_len = 64,
+        .use_apll = false,
+        .tx_desc_auto_clear = true};
+
+    i2s_pin_config_t pin_config = {
+        .bck_io_num = I2S_BCLK,
+        .ws_io_num = I2S_LRC,
+        .data_out_num = I2S_DOUT,
+        .data_in_num = I2S_PIN_NO_CHANGE};
+
+    i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
+    i2s_set_pin(I2S_NUM_0, &pin_config);
+}
+
+void generate_test_sound()
+{
+    // 生成音频数据（示例：1kHz正弦波）
+    static float phase = 0;
+    int16_t sample;
+    const float freq = 1000;     // 频率
+    const float amplitude = 0.5; // 音量
+
+    for (int i = 0; i < audio_length; i++)
+    {
+        sample = (int16_t)(amplitude * 32767 * sin(phase));
+        phase += 2 * PI * freq / 44100;
+        if (phase >= 2 * PI)
+            phase -= 2 * PI;
+
+        // 发送左右声道相同数据（单声道转立体声）
+        int16_t stereo_sample[2] = {sample, sample};
+        size_t bytes_written;
+        i2s_write(I2S_NUM_0, stereo_sample, sizeof(stereo_sample), &bytes_written, portMAX_DELAY);
+    }
+}
 
 static void configure_led(void)
 {
@@ -34,22 +90,26 @@ extern "C" void app_main(void)
 {
     ESP_LOGI(TAG, "ESP32 agent running!");
     configure_led();
+    configure_speaker();
+
+    while (1)
+    {
+        generate_test_sound();
+    }
 
     uint16_t hue = 0;         // 色相值（0-360）
     uint8_t saturation = 255; // 固定最大饱和度
     float brightness = 0;     // 亮度值（0-255）
     float phase = 0;          // 呼吸相位
 
-    const float PI = 3.14159265f;
-    const float HUE_SPEED = 3.0f;      // 色相变化速度（度/循环周期）
-    const float BREATHE_SPEED = 0.03f; // 呼吸速度（相位增量/循环周期）
-
     while (1)
     {
         brightness = (sin(phase) + 1) * 127.5f;
         uint8_t r, g, b;
         fast_hsv2rgb_32bit(hue, saturation, (uint8_t)roundf(brightness), &r, &g, &b);
+        // TODO: gammar correction
 
+        // for single color led, we can also use `ledc_set_fade_with_time`
         led_strip_set_pixel(led_strip, 0, r, g, b);
         led_strip_refresh(led_strip);
 
