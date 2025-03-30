@@ -19,7 +19,8 @@ static const char *TAG = "example";
 /* Use project configuration menu (idf.py menuconfig) to choose the GPIO to blink,
    or you can edit the following line and set a number here.
 */
-#define BLINK_GPIO CONFIG_BLINK_GPIO
+// see: https://github.com/espressif/esp-idf/issues/12592#issuecomment-1817343243
+#define BLINK_GPIO (gpio_num_t)CONFIG_BLINK_GPIO
 
 static uint8_t s_led_state = 0;
 
@@ -88,7 +89,7 @@ static void configure_led(void)
 #error "unsupported LED type"
 #endif
 
-void app_main(void)
+extern "C" void app_main(void)
 {
 
     /* Configure the peripheral according to the LED type */
