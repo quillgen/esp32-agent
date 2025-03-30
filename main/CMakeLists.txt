@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.cpp"
+idf_component_register(SRCS "src/led.cpp" "main.cpp"
                        PRIV_REQUIRES spi_flash
                        REQUIRES driver
-                       INCLUDE_DIRS "")
+                       INCLUDE_DIRS "include")
