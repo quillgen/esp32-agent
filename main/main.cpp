@@ -7,17 +7,12 @@
 #include "esp_log.h"
 #include "led_strip.h"
 #include "sdkconfig.h"
-#include "led.h"
+#include "fast_hsv2rgb.h"
 
 static const char *TAG = "example";
 
 // see: https://github.com/espressif/esp-idf/issues/12592#issuecomment-1817343243
 #define BLINK_GPIO (gpio_num_t) CONFIG_BLINK_GPIO
-
-#define BREATHE_SPEED 0.01  // 呼吸速度（值越大呼吸越快）
-#define BREATHE_DELAY_MS 25 // 刷新间隔（影响流畅度）
-#define SATURATION 0.9      // 饱和度 (0.0~1.0)
-#define PHASE_INCREMENT 180 // 控制呼吸速度（246 ≈ 2π/256）
 
 static led_strip_handle_t led_strip;
 
@@ -40,24 +35,27 @@ extern "C" void app_main(void)
     ESP_LOGI(TAG, "ESP32 agent running!");
     configure_led();
 
-    uint16_t phase = 0;       // 相位累加器
-    uint16_t hue = 0;         // 色相（0-359）
-    uint8_t saturation = 255; // 饱和度（0-255）
+    uint16_t hue = 0;         // 色相值（0-360）
+    uint8_t saturation = 255; // 固定最大饱和度
+    float brightness = 0;     // 亮度值（0-255）
+    float phase = 0;          // 呼吸相位
+
+    const float PI = 3.14159265f;
+    const float HUE_SPEED = 3.0f;      // 色相变化速度（度/循环周期）
+    const float BREATHE_SPEED = 0.03f; // 呼吸速度（相位增量/循环周期）
+
     while (1)
     {
-        int32_t sin_val = int_sin(phase);
-        uint8_t val = (sin_val * 255L) >> 16; // 转换为0-255范围
-        val = (val + 256) >> 1;               // 修正为单向波形
+        brightness = (sin(phase) + 1) * 127.5f;
         uint8_t r, g, b;
-        hsv2rgb_fast(hue, saturation, 20, &r, &g, &b);
+        fast_hsv2rgb_32bit(hue, saturation, (uint8_t)roundf(brightness), &r, &g, &b);
 
-        ESP_LOGI(TAG, "changing color to rgb=%d,%d,%d!", r, g, b);
         led_strip_set_pixel(led_strip, 0, r, g, b);
         led_strip_refresh(led_strip);
 
-        // 相位和色相更新
-        phase += PHASE_INCREMENT; // 控制呼吸速度
-        hue = (hue + 1) % 360;    // 色相渐变（可选）
-        vTaskDelay(pdMS_TO_TICKS(BREATHE_DELAY_MS));
+        // 更新色相和呼吸相位
+        hue = (uint16_t)(hue + HUE_SPEED) % HSV_HUE_MAX;
+        phase = fmod(phase + BREATHE_SPEED, 2 * PI);
+        vTaskDelay(pdMS_TO_TICKS(40));
     }
 }

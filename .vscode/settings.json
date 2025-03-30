@@ -10,6 +10,7 @@
   "idf.flashType": "UART",
   "idf.pythonInstallPath": "/opt/miniconda3/bin/python",
   "files.associations": {
-    "esp_chip_info.h": "c"
+    "esp_chip_info.h": "c",
+    "cmath": "cpp"
   }
 }
