@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -52,22 +53,14 @@ static void configure_speaker()
 
 void generate_test_sound()
 {
-    // 生成音频数据（示例：1kHz正弦波）
-    static float phase = 0;
-    int16_t sample;
-    const float freq = 1000;     // 频率
-    const float amplitude = 0.5; // 音量
+    size_t bytes_written;
+    for (uint32_t i = 0; i < audio_length; i++) {
+        // 从Flash读取数据（无需pgmspace.h）
+        int16_t sample;
+        memcpy(&sample, &audio_data[i], sizeof(sample)); // 安全读取方式
 
-    for (int i = 0; i < audio_length; i++)
-    {
-        sample = (int16_t)(amplitude * 32767 * sin(phase));
-        phase += 2 * PI * freq / 44100;
-        if (phase >= 2 * PI)
-            phase -= 2 * PI;
-
-        // 发送左右声道相同数据（单声道转立体声）
+        // 发送立体声数据
         int16_t stereo_sample[2] = {sample, sample};
-        size_t bytes_written;
         i2s_write(I2S_NUM_0, stereo_sample, sizeof(stereo_sample), &bytes_written, portMAX_DELAY);
     }
 }
