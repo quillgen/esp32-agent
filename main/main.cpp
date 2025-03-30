@@ -10,8 +10,11 @@
 #include <led_strip.h>
 
 #include "sdkconfig.h"
-#include "fast_hsv2rgb.h"
+#include "led/fast_hsv2rgb.h"
 #include "wav.h"
+#include "application.h"
+
+using namespace walle;
 
 static const char *TAG = "example";
 
@@ -21,7 +24,7 @@ static const char *TAG = "example";
 #define I2S_LRC 16
 #define I2S_DOUT 7
 
-#define I2S_MIC_WS   4   // WS (LRCLK)
+#define I2S_MIC_WS 4   // WS (LRCLK)
 #define I2S_MIC_BCLK 5 // BCLK
 #define I2S_MIC_DATA 6 // DATA
 
@@ -130,35 +133,5 @@ static void configure_led(void)
 extern "C" void app_main(void)
 {
     ESP_LOGI(TAG, "ESP32 agent running!");
-    configure_led();
-    configure_speaker();
-    configure_mic();
-
-    while (1)
-    {
-        // generate_test_sound();
-        read_sound();
-    }
-
-    uint16_t hue = 0;         // 色相值（0-360）
-    uint8_t saturation = 255; // 固定最大饱和度
-    float brightness = 0;     // 亮度值（0-255）
-    float phase = 0;          // 呼吸相位
-
-    while (1)
-    {
-        brightness = (sin(phase) + 1) * 127.5f;
-        uint8_t r, g, b;
-        fast_hsv2rgb_32bit(hue, saturation, (uint8_t)roundf(brightness), &r, &g, &b);
-        // TODO: gammar correction
-
-        // for single color led, we can also use `ledc_set_fade_with_time`
-        led_strip_set_pixel(led_strip, 0, r, g, b);
-        led_strip_refresh(led_strip);
-
-        // 更新色相和呼吸相位
-        hue = (uint16_t)(hue + HUE_SPEED) % HSV_HUE_MAX;
-        phase = fmod(phase + BREATHE_SPEED, 2 * PI);
-        vTaskDelay(pdMS_TO_TICKS(40));
-    }
+    Application::GetInstance().start();
 }
