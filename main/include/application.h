@@ -3,56 +3,50 @@
 
 #include "led/led.h"
 
-namespace walle
-{
+namespace walle {
 
-    enum AppState
-    {
-        Unknown,
-        Starting,
-        ConfiguringWifi,
-        Idle,
-        Connecting,
-        Listening,
-        Speaking,
-        Upgrading,
-        Activating,
-        Error,
-    };
+enum app_state {
+  unknown,
+  starting,
+  configuring_wifi,
+  idle,
+  connecting,
+  listening,
+  speaking,
+  upgrading,
+  activiting,
+  error,
+};
 
-    class Application
-    {
-    public:
-        static Application &GetInstance()
-        {
-            static Application instance;
-            return instance;
-        }
+class application {
+public:
+  static application &instance() {
+    static application INSTANCE;
+    return INSTANCE;
+  }
 
-    public:
-        Application(const Application &) = delete;
-        Application &operator=(const Application &) = delete;
+public:
+  application(const application &) = delete;
+  application &operator=(const application &) = delete;
 
-    public:
-        inline AppState getState()
-        {
-            return this->_state;
-        }
+public:
+  inline app_state get_state() { return this->state; }
 
-        void start();
+  void start();
+  void reboot();
 
-    private:
-        Application();
-        ~Application();
+private:
+  application();
+  ~application();
 
-    private:
-        void mainLoop();
-        void setAppState(AppState state);
+private:
+  void main_loop();
+  void set_state(app_state state);
 
-    private:
-        volatile AppState _state = Unknown;
-        Led *_led = nullptr;
-    };
-}
+private:
+  volatile app_state state = unknown;
+  led *_led = nullptr;
+};
+} // namespace walle
 
 #endif

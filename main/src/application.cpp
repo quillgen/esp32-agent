@@ -7,31 +7,26 @@ using namespace walle;
 
 #define TAG "Application"
 
-Application::Application()
-{
-    this->_led = new RgbLed((gpio_num_t)CONFIG_BLINK_GPIO);
-    setAppState(Unknown);
+application::application() {
+  this->_led = new rgb_led((gpio_num_t)CONFIG_BLINK_GPIO);
 }
 
-Application::~Application()
-{
-    delete this->_led;
+application::~application() { delete this->_led; }
+
+void application::start() { set_state(starting); }
+
+void application::main_loop() {}
+
+void application::set_state(app_state state) {
+  if (this->state == state) {
+    return;
+  }
+  this->state = state;
+  ESP_LOGI(TAG, "STATE: %d", this->state);
+  this->_led->on_state_changed();
 }
 
-void Application::start()
-{
-}
-
-void Application::mainLoop()
-{
-}
-
-void Application::setAppState(AppState state)
-{
-    if (this->_state == state)
-    {
-        return;
-    }
-    ESP_LOGI(TAG, "STATE: %s", state);
-    this->_led->onStateChanged();
+void application::reboot() {
+  ESP_LOGI(TAG, "Rebooting the application...");
+  esp_restart();
 }

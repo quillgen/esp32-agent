@@ -1,35 +1,37 @@
 #ifndef __RGB_LED_H_
 #define __RGB_LED_H_
 
-#include <driver/gpio.h>
-#include <led_strip.h>
-#include <esp_timer.h>
 #include <atomic>
+#include <driver/gpio.h>
+#include <esp_timer.h>
+#include <led_strip.h>
 #include <mutex>
 
 #include "led.h"
 
-namespace walle
-{
-    class RgbLed : public Led
-    {
-    public:
-        RgbLed(gpio_num_t pin);
-        virtual ~RgbLed();
+namespace walle {
+class rgb_led : public led {
+public:
+  rgb_led(gpio_num_t pin);
+  virtual ~rgb_led();
 
-    public:
-        void onStateChanged() override;
-        void show(uint8_t r, uint8_t g, uint8_t b);
-        void blink(uint8_t r, uint8_t g, uint8_t b, int interval_ms);
-        void breathe();
-        void turnOff();
+public:
+  void on_state_changed() override;
+  void show(uint8_t r, uint8_t g, uint8_t b);
+  void blink(uint8_t r, uint8_t g, uint8_t b, int interval_ms);
+  void breathe();
+  void turn_off();
 
-    private:
-        gpio_num_t _pin;
-        led_strip_handle_t _led_strip = nullptr;
-        esp_timer_handle_t _strip_timer = nullptr;
-        std::mutex _mutex;
-    };
-}
+private:
+  void start_timer(int interval_ms, std::function<void()> callback);
+
+private:
+  gpio_num_t pin;
+  led_strip_handle_t led_strip = nullptr;
+  esp_timer_handle_t strip_timer = nullptr;
+  std::mutex mutex;
+  std::function<void()> strip_callback = nullptr;
+};
+} // namespace walle
 
 #endif
