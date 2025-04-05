@@ -5,15 +5,26 @@
 
 using namespace walle;
 
-#define TAG "Application"
+#define TAG "🤖 APP"
 
 application::application() {
+  this->event_group = xEventGroupCreate();
   this->_led = new rgb_led((gpio_num_t)CONFIG_BLINK_GPIO);
+  this->_network = new network(this->event_group);
 }
 
-application::~application() { delete this->_led; }
+application::~application() {
+  if (this->_led != nullptr)
+    delete this->_led;
+  if (this->_network != nullptr)
+    delete this->_network;
+  vEventGroupDelete(this->event_group);
+}
 
-void application::start() { set_state(starting); }
+void application::start() {
+  set_state(starting);
+  this->_network->init_wifi();
+}
 
 void application::main_loop() {}
 

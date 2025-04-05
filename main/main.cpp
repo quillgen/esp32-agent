@@ -8,6 +8,7 @@
 #include <driver/spi_common.h>
 #include <driver/spi_master.h>
 
+#include <esp_event.h>
 #include <esp_lcd_io_spi.h>
 #include <esp_lcd_panel_io.h>
 #include <esp_lcd_panel_ops.h>
@@ -20,16 +21,19 @@
 #include <lvgl.h>
 
 #include "application.h"
+#include "flash.h"
 #include "led/fast_hsv2rgb.h"
 #include "sdkconfig.h"
 #include "wav.h"
 
 using namespace walle;
 
-static const char *TAG = "Walle";
+static const char *TAG = "🤖 MAIN";
 
 extern "C" void app_main(void) {
   ESP_LOGI(TAG, "ESP32 agent running!");
+  init_flash();
+
   application::instance().start();
 
   while (1) {

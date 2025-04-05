@@ -1,4 +1,4 @@
-menu "Agent build configuration"
+menu "🤖 AGENT configuration"
 
     orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
     config BLINK_GPIO
@@ -7,4 +7,14 @@ menu "Agent build configuration"
         default 48
         help
             GPIO number (IOxx) of RGB led.
+    config ESP_WIFI_SSID
+        string "WiFi SSID"
+        default "ChinaNet-uvZD"
+        help
+            SSID (network name).
+    config ESP_WIFI_PASSWORD
+        string "WiFi Password"
+        default "fake-password"
+        help
+            WiFi password (WPA or WPA2).
 endmenu

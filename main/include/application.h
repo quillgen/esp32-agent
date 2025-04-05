@@ -1,7 +1,12 @@
 #ifndef __APPLICATION_H_
 #define __APPLICATION_H_
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/event_groups.h>
+#include <freertos/task.h>
+
 #include "led/led.h"
+#include "network.h"
 
 namespace walle {
 
@@ -46,6 +51,8 @@ private:
 private:
   volatile app_state state = unknown;
   led *_led = nullptr;
+  network *_network = nullptr;
+  EventGroupHandle_t event_group = nullptr;
 };
 } // namespace walle
 
