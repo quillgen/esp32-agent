@@ -1,0 +1,52 @@
+<definition hotspot_y="79" type="element" width="110" link_type="simple" hotspot_x="55" height="110" version="0.90">
+    <uuid uuid="{8407cde4-60f1-4146-bb5a-c2194ceb9d1a}"/>
+    <names>
+        <name lang="en">MAX98357a</name>
+    </names>
+    <elementInformations/>
+    <informations></informations>
+    <description>
+        <rect rx="0" width="100" x="-50" ry="0" y="-70" antialias="false" style="line-style:normal;line-weight:normal;filling:none;color:black" height="90"/>
+        <circle x="24" diameter="15" y="-61" antialias="false" style="line-style:normal;line-weight:normal;filling:none;color:black"/>
+        <circle x="-40" diameter="15" y="-60" antialias="false" style="line-style:normal;line-weight:normal;filling:none;color:black"/>
+        <dynamic_text uuid="{b6c7247e-6a82-4c76-8eca-9d9588f5a4ff}" text_width="-1" Halignment="AlignLeft" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="10" text_from="UserText" Valignment="AlignTop" rotation="0" y="-90" z="3" frame="false" keep_visual_rotation="false">
+            <text>-</text>
+        </dynamic_text>
+        <dynamic_text uuid="{4aebfb21-dadf-4487-82d6-c476cf604dcd}" text_width="-1" Halignment="AlignLeft" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="-25" text_from="UserText" Valignment="AlignTop" rotation="0" y="-90" z="4" frame="false" keep_visual_rotation="false">
+            <text>+</text>
+        </dynamic_text>
+        <dynamic_text uuid="{b419df1d-87fe-406c-ab1c-d66d51b63848}" text_width="-1" Halignment="AlignHCenter" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="-35" text_from="UserText" Valignment="AlignVCenter" rotation="90" y="25" z="5" frame="false" keep_visual_rotation="false">
+            <text>LRC</text>
+        </dynamic_text>
+        <dynamic_text uuid="{c52e4825-9958-4c01-9dd6-33a43769e001}" text_width="-1" Halignment="AlignHCenter" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="-20" text_from="UserText" Valignment="AlignVCenter" rotation="90" y="25" z="6" frame="false" keep_visual_rotation="false">
+            <text>BCLK</text>
+        </dynamic_text>
+        <dynamic_text uuid="{a5da2de2-690d-402f-b798-7f4b7d0821a6}" text_width="-1" Halignment="AlignHCenter" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="-5" text_from="UserText" Valignment="AlignVCenter" rotation="90" y="25" z="7" frame="false" keep_visual_rotation="false">
+            <text>DIN</text>
+        </dynamic_text>
+        <dynamic_text uuid="{5112f1ae-7f3e-4bf5-9355-ca4737f564fa}" text_width="-1" Halignment="AlignHCenter" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="10" text_from="UserText" Valignment="AlignVCenter" rotation="90" y="25" z="8" frame="false" keep_visual_rotation="false">
+            <text>GAIN</text>
+        </dynamic_text>
+        <dynamic_text uuid="{9cc4d7aa-f0e2-4bb9-98be-637827716602}" text_width="-1" Halignment="AlignHCenter" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="25" text_from="UserText" Valignment="AlignVCenter" rotation="90" y="25" z="9" frame="false" keep_visual_rotation="false">
+            <text>SD</text>
+        </dynamic_text>
+        <dynamic_text uuid="{56ff56ee-92d6-40cf-bab8-523fa1adfced}" text_width="-1" Halignment="AlignHCenter" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="40" text_from="UserText" Valignment="AlignVCenter" rotation="90" y="25" z="10" frame="false" keep_visual_rotation="false">
+            <text>GND</text>
+        </dynamic_text>
+        <dynamic_text uuid="{028a3b34-3c01-4c01-9fde-5d86fb6950e2}" text_width="-1" Halignment="AlignHCenter" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="55" text_from="UserText" Valignment="AlignVCenter" rotation="90" y="25" z="11" frame="false" keep_visual_rotation="false">
+            <text>VIN</text>
+        </dynamic_text>
+        <dynamic_text uuid="{6d8a08fb-70b0-45c3-9afd-dce4cb5f11ab}" text_width="-1" Halignment="AlignLeft" font="Sans Serif,9,-1,5,0,0,0,0,0,0,normal" x="-30" text_from="UserText" Valignment="AlignTop" rotation="0" y="-35" z="12" frame="false" keep_visual_rotation="false">
+            <text>MAX98357A</text>
+        </dynamic_text>
+        <terminal uuid="{63542380-d741-491f-bf87-dbc2e0ab79e4}" orientation="s" type="Generic" x="-45" name="LRC" y="25"/>
+        <terminal uuid="{01602628-0d5b-4e24-b1f7-84c5a9c9968a}" orientation="n" type="Generic" x="-10" name="+" y="-75"/>
+        <terminal uuid="{7c495c52-ca44-4c69-bb25-82a219095b61}" orientation="n" type="Generic" x="10" name="-" y="-75"/>
+        <terminal uuid="{e761c5fc-dc0c-467e-8ce7-21517c663153}" orientation="s" type="Generic" x="-30" name="BCLK" y="25"/>
+        <terminal uuid="{9e6f1420-3c11-4675-8616-5b15ffc7c531}" orientation="s" type="Generic" x="0" name="GAIN" y="25"/>
+        <terminal uuid="{8b952bf9-30db-468d-b801-be5344297fdf}" orientation="s" type="Generic" x="45" name="VIN" y="25"/>
+        <terminal uuid="{fb8c2cf5-0689-4e73-9bfa-27a11108139b}" orientation="s" type="Generic" x="15" name="SD" y="25"/>
+        <terminal uuid="{32c093b4-eb2d-4461-954e-b763daf73dfa}" orientation="s" type="Generic" x="30" name="GND" y="25"/>
+        <terminal uuid="{1c7a8af7-2fab-4228-be98-968c6038edbc}" orientation="s" type="Generic" x="-15" name="DIN" y="25"/>
+    </description>
+</definition>

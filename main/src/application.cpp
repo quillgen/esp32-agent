@@ -11,6 +11,7 @@ application::application() {
   this->event_group = xEventGroupCreate();
   this->_led = new rgb_led((gpio_num_t)CONFIG_BLINK_GPIO);
   this->_network = new network(this->event_group);
+  this->_audio = new audio();
 }
 
 application::~application() {
@@ -18,12 +19,15 @@ application::~application() {
     delete this->_led;
   if (this->_network != nullptr)
     delete this->_network;
+  if (this->_audio != nullptr)
+    delete this->_audio;
   vEventGroupDelete(this->event_group);
 }
 
 void application::start() {
   set_state(starting);
   this->_network->init_wifi();
+  this->_audio->init_audio();
 }
 
 void application::main_loop() {}

@@ -2,6 +2,7 @@ set(SOURCES "src/led/fast_hsv2rgb_32bit.c"
     "src/led/rgb_led.cpp"
     "src/flash.cpp"
     "src/network.cpp"
+    "src/audio.cpp"
     "src/application.cpp"
     "main.cpp"
 )
