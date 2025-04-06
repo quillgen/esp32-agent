@@ -24,7 +24,6 @@ application::~application() {
 void application::start() {
   set_state(starting);
   this->_network->init_wifi();
-  this->_network->block_for_connection();
 }
 
 void application::main_loop() {}
