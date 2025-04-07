@@ -5,7 +5,8 @@
 #include <freertos/event_groups.h>
 #include <freertos/task.h>
 
-#include "audio.h"
+#include "audio/speaker.h"
+#include "display/ssd1306_oled.h"
 #include "led/led.h"
 #include "network.h"
 
@@ -53,7 +54,8 @@ private:
   volatile app_state state = unknown;
   led *_led = nullptr;
   network *_network = nullptr;
-  audio *_audio = nullptr;
+  speaker *_speaker = nullptr;
+  ssd1306_oled *oled = nullptr;
   EventGroupHandle_t event_group = nullptr;
 };
 } // namespace walle

@@ -1,6 +1,7 @@
 #include "application.h"
 #include <esp_log.h>
 
+#include "display/ssd1306_i2c.h"
 #include "led/rgb_led.h"
 
 using namespace walle;
@@ -11,7 +12,8 @@ application::application() {
   this->event_group = xEventGroupCreate();
   this->_led = new rgb_led((gpio_num_t)CONFIG_BLINK_GPIO);
   this->_network = new network(this->event_group);
-  this->_audio = new audio();
+  this->_speaker = new speaker();
+  this->oled = new ssd1306_oled_i2c();
 }
 
 application::~application() {
@@ -19,15 +21,20 @@ application::~application() {
     delete this->_led;
   if (this->_network != nullptr)
     delete this->_network;
-  if (this->_audio != nullptr)
-    delete this->_audio;
+  if (this->_speaker != nullptr)
+    delete this->_speaker;
+  if (this->oled != nullptr) {
+    delete this->oled;
+  }
   vEventGroupDelete(this->event_group);
 }
 
 void application::start() {
   set_state(starting);
   this->_network->init_wifi();
-  this->_audio->init_audio();
+  this->_speaker->init_speaker();
+  // this->_speaker->test();
+  this->oled->init();
 }
 
 void application::main_loop() {}
