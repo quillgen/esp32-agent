@@ -6,7 +6,6 @@
 namespace walle {
 
 class ssd1306_oled_i2c : public ssd1306_oled {
-
 protected:
   void configure_io_bus() override;
 

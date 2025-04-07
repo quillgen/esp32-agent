@@ -12,6 +12,9 @@
   "files.associations": {
     "esp_chip_info.h": "c",
     "cmath": "cpp",
-    "regex": "cpp"
+    "regex": "cpp",
+    "new": "cpp",
+    "cstdint": "cpp",
+    "memory": "cpp"
   }
 }
