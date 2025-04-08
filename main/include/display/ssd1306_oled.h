@@ -34,8 +34,7 @@ protected:
 
 private:
   void init_oled();
-  void lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
-                     uint8_t *px_map);
+  void flip_screen();
 
 private:
   esp_lcd_panel_handle_t panel_handle;

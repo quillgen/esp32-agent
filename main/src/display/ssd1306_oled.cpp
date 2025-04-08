@@ -144,7 +144,22 @@ void ssd1306_oled::init_oled() {
   ESP_ERROR_CHECK(esp_lcd_panel_reset(this->panel_handle));
   ESP_ERROR_CHECK(esp_lcd_panel_init(this->panel_handle));
 
+  this->flip_screen();
   ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(this->panel_handle, true));
+}
+
+void ssd1306_oled::flip_screen() {
+  /**
+   * see: https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf
+   *  - 10.1.8  Set Segment Re-map (A0h/A1h)
+   *  - 10.1.14 Set COM Output Scan Direction (C0h/C8h)
+   *
+   * or if the hardware does not support flipping, could use:
+   * esp_lcd_panel_mirror(this->panel_handle, true, true);
+   */
+
+  esp_lcd_panel_io_tx_param(io_handle, 0xA1, (uint8_t[]){0x01}, 1);
+  esp_lcd_panel_io_tx_param(io_handle, 0xC8, (uint8_t[]){0x08}, 1);
 }
 
 void ssd1306_oled::clear() {
@@ -156,7 +171,7 @@ void ssd1306_oled::clear() {
   lv_obj_t *screen = lv_display_get_screen_active(this->display);
 
   lv_obj_t *label = lv_label_create(screen);
-  lv_label_set_text(label, "Hello world!");
+  lv_label_set_text(label, "Love you!");
   lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-  // lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
+  lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
 }
