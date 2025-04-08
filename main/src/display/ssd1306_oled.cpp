@@ -172,7 +172,6 @@ void ssd1306_oled::clear() {
 }
 
 static lv_style_t status_bar_style;
-static lv_style_t status_text_style;
 
 void ssd1306_oled::draw_ui() {
   lv_obj_t *scr = lv_display_get_screen_active(this->display);
@@ -184,22 +183,22 @@ void ssd1306_oled::draw_ui() {
 
   // Add status bar styles
   lv_style_init(&status_bar_style);
-  lv_style_set_bg_color(&status_bar_style, lv_color_white());
+  lv_style_set_pad_all(&status_bar_style, 0);
   lv_style_set_border_width(&status_bar_style, 0);
   lv_obj_add_style(status_bar, &status_bar_style, 0);
 
   // Status bar elements
   lv_obj_t *battery_label = lv_label_create(status_bar);
   lv_label_set_text(battery_label, LV_SYMBOL_BATTERY_FULL);
-  lv_obj_align(battery_label, LV_ALIGN_LEFT_MID, 5, 0);
+  lv_obj_align(battery_label, LV_ALIGN_LEFT_MID, 0, 0);
 
   lv_obj_t *wifi_label = lv_label_create(status_bar);
   lv_label_set_text(wifi_label, LV_SYMBOL_WIFI);
-  lv_obj_align(wifi_label, LV_ALIGN_LEFT_MID, 25, 0);
+  lv_obj_align(wifi_label, LV_ALIGN_LEFT_MID, 20, 0);
 
   lv_obj_t *time_label = lv_label_create(status_bar);
   lv_label_set_text(time_label, "10:30");
-  lv_obj_align(time_label, LV_ALIGN_RIGHT_MID, -5, 0);
+  lv_obj_align(time_label, LV_ALIGN_RIGHT_MID, 0, 0);
 
   // Create content area
   lv_obj_t *content = lv_obj_create(scr);
@@ -209,7 +208,7 @@ void ssd1306_oled::draw_ui() {
 
   // Add main content
   lv_obj_t *main_label = lv_label_create(content);
-  lv_label_set_text(main_label, "Hello User!\nWelcome to My Device");
+  lv_label_set_text(main_label, "Hello!\nWelcome!");
   lv_obj_set_style_text_align(main_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_center(main_label);
 }
