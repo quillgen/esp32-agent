@@ -15,6 +15,7 @@
     "regex": "cpp",
     "new": "cpp",
     "cstdint": "cpp",
-    "memory": "cpp"
+    "memory": "cpp",
+    "*.tcc": "cpp"
   }
 }

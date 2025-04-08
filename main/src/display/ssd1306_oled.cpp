@@ -105,6 +105,13 @@ void ssd1306_oled::init() {
   ESP_ERROR_CHECK(esp_timer_create(&timer_args, &this->lvgl_timer));
   ESP_ERROR_CHECK(
       esp_timer_start_periodic(this->lvgl_timer, LVGL_TICK_PERIOD_MS * 1000));
+
+  /*
+    E (7026) task_wdt: Task watchdog got triggered. The following tasks/users
+    did not reset the watchdog in time:
+    Ensure the LVGL task has a lower
+    priority than the IDLE task so it doesn't starve the system.
+    */
   xTaskCreate(
       [](void *) {
         uint32_t time_till_next_ms = 0;
@@ -115,7 +122,7 @@ void ssd1306_oled::init() {
           usleep(1000 * time_till_next_ms);
         }
       },
-      "LVGL", 4096, NULL, 2, NULL);
+      "LVGL", 4096, NULL, 0, NULL);
 
   this->clear();
 }
@@ -149,7 +156,7 @@ void ssd1306_oled::clear() {
   lv_obj_t *screen = lv_display_get_screen_active(this->display);
 
   lv_obj_t *label = lv_label_create(screen);
-  lv_label_set_text(label, "123");
-  lv_obj_align(label, LV_ALIGN_CENTER, 50, 10);
+  lv_label_set_text(label, "Hello world!");
+  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
   // lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
 }
