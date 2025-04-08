@@ -27,6 +27,7 @@ public:
   void turn_on();
   void turn_off();
   void clear();
+  void draw_ui();
 
 protected:
   virtual void configure_io_bus() = 0;

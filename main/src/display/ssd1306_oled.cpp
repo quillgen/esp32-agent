@@ -15,6 +15,8 @@ static const char *TAG = "oled";
 #define OLED_HEIGHT 64
 #define PALETTE_SIZE 8
 
+#define STATUS_BAR_HEIGHT 12
+
 #define LVGL_TICK_PERIOD_MS 5
 
 static _lock_t lvgl_api_lock;
@@ -122,9 +124,9 @@ void ssd1306_oled::init() {
           usleep(1000 * time_till_next_ms);
         }
       },
-      "LVGL", 4096, NULL, 0, NULL);
+      "LVGL", 4096 * 2, NULL, 0, NULL);
 
-  this->clear();
+  this->draw_ui();
 }
 
 void ssd1306_oled::init_oled() {
@@ -163,15 +165,51 @@ void ssd1306_oled::flip_screen() {
 }
 
 void ssd1306_oled::clear() {
-  //   uint8_t buffer[OLED_WIDTH * OLED_HEIGHT / 8] = {0};
-  //   memset(buffer, 0xAA, sizeof(buffer));
-  //   esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, OLED_WIDTH, OLED_HEIGHT,
-  //                             buffer);
+  uint8_t buffer[OLED_WIDTH * OLED_HEIGHT / 8] = {0};
+  memset(buffer, 0xAA, sizeof(buffer));
+  esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, OLED_WIDTH, OLED_HEIGHT,
+                            buffer);
+}
 
-  lv_obj_t *screen = lv_display_get_screen_active(this->display);
+static lv_style_t status_bar_style;
+static lv_style_t status_text_style;
 
-  lv_obj_t *label = lv_label_create(screen);
-  lv_label_set_text(label, "Love you!");
-  lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
-  lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
+void ssd1306_oled::draw_ui() {
+  lv_obj_t *scr = lv_display_get_screen_active(this->display);
+
+  // Create status bar container
+  lv_obj_t *status_bar = lv_obj_create(scr);
+  lv_obj_set_size(status_bar, OLED_WIDTH, STATUS_BAR_HEIGHT);
+  lv_obj_align(status_bar, LV_ALIGN_TOP_MID, 0, 0);
+
+  // Add status bar styles
+  lv_style_init(&status_bar_style);
+  lv_style_set_bg_color(&status_bar_style, lv_color_white());
+  lv_style_set_border_width(&status_bar_style, 0);
+  lv_obj_add_style(status_bar, &status_bar_style, 0);
+
+  // Status bar elements
+  lv_obj_t *battery_label = lv_label_create(status_bar);
+  lv_label_set_text(battery_label, LV_SYMBOL_BATTERY_FULL);
+  lv_obj_align(battery_label, LV_ALIGN_LEFT_MID, 5, 0);
+
+  lv_obj_t *wifi_label = lv_label_create(status_bar);
+  lv_label_set_text(wifi_label, LV_SYMBOL_WIFI);
+  lv_obj_align(wifi_label, LV_ALIGN_LEFT_MID, 25, 0);
+
+  lv_obj_t *time_label = lv_label_create(status_bar);
+  lv_label_set_text(time_label, "10:30");
+  lv_obj_align(time_label, LV_ALIGN_RIGHT_MID, -5, 0);
+
+  // Create content area
+  lv_obj_t *content = lv_obj_create(scr);
+  lv_obj_set_size(content, OLED_WIDTH, OLED_HEIGHT - STATUS_BAR_HEIGHT);
+  lv_obj_align(content, LV_ALIGN_BOTTOM_MID, 0, 0);
+  lv_obj_set_style_border_width(content, 0, 0);
+
+  // Add main content
+  lv_obj_t *main_label = lv_label_create(content);
+  lv_label_set_text(main_label, "Hello User!\nWelcome to My Device");
+  lv_obj_set_style_text_align(main_label, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_center(main_label);
 }
