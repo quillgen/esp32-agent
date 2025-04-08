@@ -5,6 +5,7 @@ set(SOURCES "src/led/fast_hsv2rgb_32bit.c"
     "src/audio/speaker.cpp"
     "src/display/ssd1306_oled.cpp"
     "src/display/ssd1306_i2c.cpp"
+    "src/display/wqy_st_12.c"
     "src/application.cpp"
     "main.cpp"
 )

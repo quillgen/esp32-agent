@@ -7,6 +7,8 @@
 #include <esp_log.h>
 #include <lvgl.h>
 
+#include "display/lv_font.h"
+
 using namespace walle;
 
 static const char *TAG = "oled";
@@ -208,7 +210,8 @@ void ssd1306_oled::draw_ui() {
 
   // Add main content
   lv_obj_t *main_label = lv_label_create(content);
-  lv_label_set_text(main_label, "Hello!\nWelcome!");
+  lv_label_set_text(main_label, "Hello!\n天涯若比邻");
+  lv_obj_set_style_text_font(main_label, &wqy_st_12, 0);
   lv_obj_set_style_text_align(main_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_center(main_label);
 }

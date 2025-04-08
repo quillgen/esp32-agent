@@ -16,6 +16,7 @@
     "new": "cpp",
     "cstdint": "cpp",
     "memory": "cpp",
-    "*.tcc": "cpp"
+    "*.tcc": "cpp",
+    "lvgl.h": "c"
   }
 }
