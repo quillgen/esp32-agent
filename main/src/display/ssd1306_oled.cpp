@@ -210,7 +210,8 @@ void ssd1306_oled::draw_ui() {
 
   // Add main content
   lv_obj_t *main_label = lv_label_create(content);
-  lv_label_set_text(main_label, "Hello!\n天涯若比邻");
+  lv_label_set_text(main_label,
+                    "人类的悲欢并不相通，\n我只是觉得他们吵闹。\n——鲁迅");
   lv_obj_set_style_text_font(main_label, &wqy_st_12, 0);
   lv_obj_set_style_text_align(main_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_center(main_label);

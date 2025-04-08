@@ -7,7 +7,7 @@ using namespace walle;
 static const char *TAG = "oled";
 
 #define I2C_SDA_PIN 4
-#define I2C_SCL_PIN 15
+#define I2C_SCL_PIN 5
 
 void ssd1306_oled_i2c::configure_i2c() {
   i2c_master_bus_config_t bus_cfg = {
