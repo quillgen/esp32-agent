@@ -30,11 +30,11 @@ application::~application() {
 }
 
 void application::start() {
+  this->oled->init();
   set_state(starting);
   this->_network->init_wifi();
   // this->_speaker->init_speaker();
   //  this->_speaker->test();
-  this->oled->init();
 }
 
 void application::main_loop() {}

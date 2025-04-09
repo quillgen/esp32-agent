@@ -27,7 +27,6 @@ public:
   void turn_on();
   void turn_off();
   void clear();
-  void draw_ui();
 
 protected:
   virtual void configure_io_bus() = 0;
@@ -36,12 +35,21 @@ protected:
 private:
   void init_oled();
   void flip_screen();
+  void init_ui();
+  void update_time();
 
 private:
   esp_lcd_panel_handle_t panel_handle;
   lv_display_t *display;
   uint8_t *buffer = nullptr;
   esp_timer_handle_t lvgl_timer = nullptr;
+  lv_obj_t *screen;
+  lv_obj_t *status_bar;
+  lv_obj_t *battery_label;
+  lv_obj_t *wifi_label;
+  lv_obj_t *time_label;
+  lv_obj_t *content;
+  lv_obj_t *main_label;
 };
 } // namespace walle
 

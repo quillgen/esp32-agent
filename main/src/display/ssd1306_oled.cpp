@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <esp_log.h>
+#include <esp_sntp.h>
 #include <lvgl.h>
 
 #include "display/lv_font.h"
@@ -117,18 +118,26 @@ void ssd1306_oled::init() {
     priority than the IDLE task so it doesn't starve the system.
     */
   xTaskCreate(
-      [](void *) {
+      [](void *arg) {
+        ssd1306_oled *self = static_cast<ssd1306_oled *>(arg);
         uint32_t time_till_next_ms = 0;
         while (1) {
           _lock_acquire(&lvgl_api_lock);
+          static uint32_t last_update = 0;
+          if (lv_tick_elaps(last_update) > 1000) {
+            self->update_time();
+            last_update = lv_tick_get();
+          }
+
           time_till_next_ms = lv_timer_handler();
+          if (time_till_next_ms == LV_NO_TIMER_READY)
+            time_till_next_ms = LV_DEF_REFR_PERIOD;
           _lock_release(&lvgl_api_lock);
-          usleep(1000 * time_till_next_ms);
+          vTaskDelay(pdMS_TO_TICKS(time_till_next_ms));
         }
       },
-      "LVGL", 4096 * 2, NULL, 0, NULL);
-
-  this->draw_ui();
+      "LVGL", 4096 * 2, this, 0, NULL);
+  this->init_ui();
 }
 
 void ssd1306_oled::init_oled() {
@@ -175,11 +184,11 @@ void ssd1306_oled::clear() {
 
 static lv_style_t status_bar_style;
 
-void ssd1306_oled::draw_ui() {
-  lv_obj_t *scr = lv_display_get_screen_active(this->display);
+void ssd1306_oled::init_ui() {
+  this->screen = lv_display_get_screen_active(this->display);
 
   // Create status bar container
-  lv_obj_t *status_bar = lv_obj_create(scr);
+  this->status_bar = lv_obj_create(screen);
   lv_obj_set_size(status_bar, OLED_WIDTH, STATUS_BAR_HEIGHT);
   lv_obj_align(status_bar, LV_ALIGN_TOP_MID, 0, 0);
 
@@ -190,29 +199,39 @@ void ssd1306_oled::draw_ui() {
   lv_obj_add_style(status_bar, &status_bar_style, 0);
 
   // Status bar elements
-  lv_obj_t *battery_label = lv_label_create(status_bar);
+  this->battery_label = lv_label_create(status_bar);
   lv_label_set_text(battery_label, LV_SYMBOL_BATTERY_FULL);
   lv_obj_align(battery_label, LV_ALIGN_LEFT_MID, 0, 0);
 
-  lv_obj_t *wifi_label = lv_label_create(status_bar);
+  this->wifi_label = lv_label_create(status_bar);
   lv_label_set_text(wifi_label, LV_SYMBOL_WIFI);
   lv_obj_align(wifi_label, LV_ALIGN_LEFT_MID, 20, 0);
 
-  lv_obj_t *time_label = lv_label_create(status_bar);
-  lv_label_set_text(time_label, "10:30");
+  this->time_label = lv_label_create(status_bar);
+  lv_label_set_text(time_label, "00:00:00");
   lv_obj_align(time_label, LV_ALIGN_RIGHT_MID, 0, 0);
 
   // Create content area
-  lv_obj_t *content = lv_obj_create(scr);
+  this->content = lv_obj_create(this->screen);
   lv_obj_set_size(content, OLED_WIDTH, OLED_HEIGHT - STATUS_BAR_HEIGHT);
   lv_obj_align(content, LV_ALIGN_BOTTOM_MID, 0, 0);
   lv_obj_set_style_border_width(content, 0, 0);
 
   // Add main content
-  lv_obj_t *main_label = lv_label_create(content);
+  this->main_label = lv_label_create(content);
   lv_label_set_text(main_label,
                     "人类的悲欢并不相通，\n我只是觉得他们吵闹。\n——鲁迅");
   lv_obj_set_style_text_font(main_label, &wqy_st_12, 0);
   lv_obj_set_style_text_align(main_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_center(main_label);
+}
+
+void ssd1306_oled::update_time() {
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+  localtime_r(&now, &timeinfo);
+  static char time_str[32];
+  strftime(time_str, sizeof(time_str), "%H:%M:%S", &timeinfo);
+  lv_label_set_text(this->time_label, time_str);
 }
