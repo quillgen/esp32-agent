@@ -32,8 +32,8 @@ application::~application() {
 void application::start() {
   set_state(starting);
   this->_network->init_wifi();
-  this->_speaker->init_speaker();
-  // this->_speaker->test();
+  // this->_speaker->init_speaker();
+  //  this->_speaker->test();
   this->oled->init();
 }
 

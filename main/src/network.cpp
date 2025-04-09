@@ -1,12 +1,17 @@
 #include "network.h"
 
 #include <esp_log.h>
+#include <esp_netif_sntp.h>
+#include <esp_sntp.h>
 #include <esp_wifi.h>
 
 using namespace walle;
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
+
+#define NTP_SERVER_1 "ntp.tuna.tsinghua.edu.cn"
+#define NTP_SERVER_2 "ntp.aliyun.com"
 
 static const int MAX_RETRY_COUNT = 3;
 static const char *TAG = "🤖 NET";
@@ -86,10 +91,44 @@ void network::init_wifi() {
                           pdFALSE, pdFALSE, portMAX_DELAY);
   if (bits & WIFI_CONNECTED_BIT) {
     ESP_LOGI(TAG, "connected to ap");
+    this->sync_time();
+
+    int retry = 0;
+    const int max_retry = 15;
+    while (esp_netif_sntp_sync_wait(2000 / portTICK_PERIOD_MS) ==
+               ESP_ERR_TIMEOUT &&
+           ++retry < retry_count) {
+      ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry,
+               retry_count);
+      vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+
+    time_t now;
+    struct tm timeinfo;
+    time(&now);
+    setenv("TZ", "CST-8", 1);
+    tzset();
+    localtime_r(&now, &timeinfo);
+    char strftime_buf[64];
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
+
+    esp_netif_sntp_deinit();
   } else if (bits & WIFI_FAIL_BIT) {
     ESP_LOGE(TAG, "Failed to connect to SSID:%s, password:%s",
              CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
   } else {
     ESP_LOGE(TAG, "UNEXPECTED EVENT");
   }
+}
+
+void time_sync_notification_cb(struct timeval *tv) {
+  ESP_LOGI(TAG, "sntp time sync done!");
+}
+
+void network::sync_time() {
+  ESP_LOGI(TAG, "initialize SNTP...");
+  esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG(NTP_SERVER_1);
+  config.sync_cb = time_sync_notification_cb;
+  esp_netif_sntp_init(&config);
 }

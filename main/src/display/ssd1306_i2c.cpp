@@ -42,7 +42,7 @@ void ssd1306_oled_i2c::configure_io_bus() {
               .dc_low_on_data = 0,
               .disable_control_phase = 0,
           },
-      .scl_speed_hz = 400 * 1000,
+      .scl_speed_hz = 200 * 1000,
   };
 
   ESP_ERROR_CHECK(

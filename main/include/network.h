@@ -16,6 +16,7 @@ private:
                      void *event_data);
   static void event_handler_static(void *arg, esp_event_base_t base,
                                    int32_t event_id, void *event_data);
+  void sync_time();
 
 private:
   int retry_count = 0;
