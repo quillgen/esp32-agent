@@ -65,7 +65,9 @@ void rgb_led::on_state_changed() {
   ESP_LOGI(TAG, "Received app state change: %d", state);
   switch (state) {
   case starting:
-    breathe(20);
+    // breathe(20);
+    led_strip_set_pixel(this->led_strip, 0, 1, 1, 1);
+    led_strip_refresh(this->led_strip);
     break;
 
   default:
