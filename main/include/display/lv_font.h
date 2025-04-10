@@ -5,4 +5,6 @@
 
 extern lv_font_t wqy_st_12;
 
+extern lv_font_t cascadia_code_14;
+
 #endif

@@ -10,7 +10,7 @@ using namespace walle;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
 
-#define NTP_SERVER_1 "ntp.tuna.tsinghua.edu.cn"
+#define NTP_SERVER_1 "ntp.aliyun.com"
 #define NTP_SERVER_2 "ntp.aliyun.com"
 
 static const int MAX_RETRY_COUNT = 3;
@@ -103,6 +103,8 @@ void network::init_wifi() {
       vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 
+    ESP_LOGI(TAG, "retry =%d", retry);
+
     time_t now;
     struct tm timeinfo;
     time(&now);
@@ -113,7 +115,7 @@ void network::init_wifi() {
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
 
-    esp_netif_sntp_deinit();
+    // esp_netif_sntp_deinit();
   } else if (bits & WIFI_FAIL_BIT) {
     ESP_LOGE(TAG, "Failed to connect to SSID:%s, password:%s",
              CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);

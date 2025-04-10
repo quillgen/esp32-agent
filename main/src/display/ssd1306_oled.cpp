@@ -18,7 +18,7 @@ static const char *TAG = "oled";
 #define OLED_HEIGHT 64
 #define PALETTE_SIZE 8
 
-#define STATUS_BAR_HEIGHT 12
+#define STATUS_BAR_HEIGHT (OLED_HEIGHT / 4)
 
 #define LVGL_TICK_PERIOD_MS 5
 
@@ -196,7 +196,7 @@ void ssd1306_oled::init_ui() {
   lv_style_init(&status_bar_style);
   lv_style_set_pad_all(&status_bar_style, 0);
   lv_style_set_border_width(&status_bar_style, 0);
-  lv_style_set_text_font(&status_bar_style, &wqy_st_12);
+  lv_style_set_text_font(&status_bar_style, &cascadia_code_14);
   lv_obj_add_style(status_bar, &status_bar_style, 0);
 
   // Status bar elements

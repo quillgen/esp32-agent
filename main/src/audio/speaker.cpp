@@ -24,7 +24,7 @@ void speaker::init_speaker() {
       .sample_rate = 16000,
       .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
       .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
-      .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+      .communication_format = I2S_COMM_FORMAT_I2S,
       .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
       .dma_buf_count = 8,
       .dma_buf_len = 512,
@@ -75,7 +75,7 @@ esp_err_t speaker::http_event_handler(esp_http_client_event_t *e) {
       int16_t *raw_data = (int16_t *)e->data;
       size_t sample_count = e->data_len / sizeof(int16_t);
       for (int i = 0; i < sample_count; i++) {
-        raw_data[i] = raw_data[i] * 0.1f;
+        raw_data[i] = raw_data[i] * 0.05f; // audio gain
       }
       i2s_write(I2S_NUM_0, e->data, e->data_len, &bytes_written, portMAX_DELAY);
     }
