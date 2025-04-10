@@ -196,6 +196,7 @@ void ssd1306_oled::init_ui() {
   lv_style_init(&status_bar_style);
   lv_style_set_pad_all(&status_bar_style, 0);
   lv_style_set_border_width(&status_bar_style, 0);
+  lv_style_set_text_font(&status_bar_style, &wqy_st_12);
   lv_obj_add_style(status_bar, &status_bar_style, 0);
 
   // Status bar elements
@@ -221,6 +222,7 @@ void ssd1306_oled::init_ui() {
   this->main_label = lv_label_create(content);
   lv_label_set_text(main_label,
                     "人类的悲欢并不相通，\n我只是觉得他们吵闹。\n——鲁迅");
+
   lv_obj_set_style_text_font(main_label, &wqy_st_12, 0);
   lv_obj_set_style_text_align(main_label, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_center(main_label);

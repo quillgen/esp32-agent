@@ -17,6 +17,9 @@
     "cstdint": "cpp",
     "memory": "cpp",
     "*.tcc": "cpp",
-    "lvgl.h": "c"
+    "lvgl.h": "c",
+    "bitset": "cpp",
+    "algorithm": "cpp",
+    "format": "cpp"
   }
 }

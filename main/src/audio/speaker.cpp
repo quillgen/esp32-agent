@@ -2,6 +2,7 @@
 #include "audio/wav.h"
 #include <driver/gpio.h>
 #include <driver/i2s.h>
+#include <math.h>
 
 #include <esp_log.h>
 
@@ -71,6 +72,11 @@ esp_err_t speaker::http_event_handler(esp_http_client_event_t *e) {
     } else {
       // Stream PCM data to I2S
       size_t bytes_written;
+      int16_t *raw_data = (int16_t *)e->data;
+      size_t sample_count = e->data_len / sizeof(int16_t);
+      for (int i = 0; i < sample_count; i++) {
+        raw_data[i] = raw_data[i] * 0.1f;
+      }
       i2s_write(I2S_NUM_0, e->data, e->data_len, &bytes_written, portMAX_DELAY);
     }
     break;

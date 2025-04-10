@@ -33,8 +33,8 @@ void application::start() {
   this->oled->init();
   set_state(starting);
   this->_network->init_wifi();
-  // this->_speaker->init_speaker();
-  //  this->_speaker->test();
+  this->_speaker->init_speaker();
+  this->_speaker->test();
 }
 
 void application::main_loop() {}
