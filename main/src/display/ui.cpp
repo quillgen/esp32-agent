@@ -21,9 +21,16 @@ void ui::on_lv_tick() {
   static uint32_t progress = 0;
   if (lv_tick_elaps(last_update) > 1000) {
     ++progress;
-    // if (progress % 3 == 0) {
-    //   lv_label_set_text(progress_label, "系统加载中...");
-    // }
+    uint8_t p = progress % 4;
+    if (p == 0) {
+      lv_label_set_text(progress_label, "系统加载中");
+    } else if (p == 1) {
+      lv_label_set_text(progress_label, "系统加载中.");
+    } else if (p == 2) {
+      lv_label_set_text(progress_label, "系统加载中..");
+    } else {
+      lv_label_set_text(progress_label, "系统加载中...");
+    }
     last_update = lv_tick_get();
   }
 }
