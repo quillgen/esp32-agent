@@ -130,11 +130,7 @@ void ssd1306_oled::init() {
         uint32_t time_till_next_ms = 0;
         while (1) {
           _lock_acquire(&lvgl_api_lock);
-          static uint32_t last_update = 0;
-          if (lv_tick_elaps(last_update) > 1000) {
-            self->update_time();
-            last_update = lv_tick_get();
-          }
+          self->_ui->on_lv_tick();
 
           time_till_next_ms = lv_timer_handler();
           if (time_till_next_ms == LV_NO_TIMER_READY)
@@ -192,13 +188,3 @@ void ssd1306_oled::clear() {
 }
 
 static lv_style_t status_bar_style;
-
-void ssd1306_oled::update_time() {
-  time_t now;
-  struct tm timeinfo;
-  time(&now);
-  localtime_r(&now, &timeinfo);
-  static char time_str[32];
-  strftime(time_str, sizeof(time_str), "%H:%M:%S", &timeinfo);
-  // lv_label_set_text(this->time_label, time_str);
-}
