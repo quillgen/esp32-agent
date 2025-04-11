@@ -27,12 +27,19 @@ static _lock_t lvgl_api_lock;
 size_t buffer_size = (OLED_WIDTH * OLED_HEIGHT) / 8 + PALETTE_SIZE;
 static uint8_t oled_buffer[OLED_WIDTH * OLED_HEIGHT / 8];
 
-ssd1306_oled::ssd1306_oled() { this->buffer = new uint8_t[buffer_size]{}; }
+ssd1306_oled::ssd1306_oled() {
+  this->buffer = new uint8_t[buffer_size]{};
+  this->_ui = new ui(this->display);
+}
 
 ssd1306_oled::~ssd1306_oled() {
   if (this->display != nullptr) {
     delete this->display;
   }
+  if (this->_ui != nullptr) {
+    delete this->_ui;
+  }
+
   delete[] buffer;
 }
 
@@ -137,7 +144,9 @@ void ssd1306_oled::init() {
         }
       },
       "LVGL", 4096 * 2, this, 0, NULL);
-  this->init_ui();
+
+  this->_ui->initialize();
+  this->_ui->show_splash();
 }
 
 void ssd1306_oled::init_oled() {
@@ -184,50 +193,6 @@ void ssd1306_oled::clear() {
 
 static lv_style_t status_bar_style;
 
-void ssd1306_oled::init_ui() {
-  this->screen = lv_display_get_screen_active(this->display);
-
-  // Create status bar container
-  this->status_bar = lv_obj_create(screen);
-  lv_obj_set_size(status_bar, OLED_WIDTH, STATUS_BAR_HEIGHT);
-  lv_obj_align(status_bar, LV_ALIGN_TOP_MID, 0, 0);
-
-  // Add status bar styles
-  lv_style_init(&status_bar_style);
-  lv_style_set_pad_all(&status_bar_style, 0);
-  lv_style_set_border_width(&status_bar_style, 0);
-  lv_style_set_text_font(&status_bar_style, &cascadia_code_14);
-  lv_obj_add_style(status_bar, &status_bar_style, 0);
-
-  // Status bar elements
-  this->battery_label = lv_label_create(status_bar);
-  lv_label_set_text(battery_label, LV_SYMBOL_BATTERY_FULL);
-  lv_obj_align(battery_label, LV_ALIGN_LEFT_MID, 0, 0);
-
-  this->wifi_label = lv_label_create(status_bar);
-  lv_label_set_text(wifi_label, LV_SYMBOL_WIFI);
-  lv_obj_align(wifi_label, LV_ALIGN_LEFT_MID, 20, 0);
-
-  this->time_label = lv_label_create(status_bar);
-  lv_label_set_text(time_label, "00:00:00");
-  lv_obj_align(time_label, LV_ALIGN_RIGHT_MID, 0, 0);
-
-  // Create content area
-  this->content = lv_obj_create(this->screen);
-  lv_obj_set_size(content, OLED_WIDTH, OLED_HEIGHT - STATUS_BAR_HEIGHT);
-  lv_obj_align(content, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_set_style_border_width(content, 0, 0);
-
-  // Add main content
-  this->main_label = lv_label_create(content);
-  lv_label_set_text(main_label,
-                    "人类的悲欢并不相通，\n我只是觉得他们吵闹。\n——鲁迅");
-
-  lv_obj_set_style_text_font(main_label, &wqy_st_12, 0);
-  lv_obj_set_style_text_align(main_label, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_center(main_label);
-}
-
 void ssd1306_oled::update_time() {
   time_t now;
   struct tm timeinfo;
@@ -235,5 +200,5 @@ void ssd1306_oled::update_time() {
   localtime_r(&now, &timeinfo);
   static char time_str[32];
   strftime(time_str, sizeof(time_str), "%H:%M:%S", &timeinfo);
-  lv_label_set_text(this->time_label, time_str);
+  // lv_label_set_text(this->time_label, time_str);
 }

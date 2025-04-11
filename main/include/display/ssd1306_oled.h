@@ -9,6 +9,7 @@
 #include <lvgl.h>
 
 #include "device.h"
+#include "ui.h"
 #include <functional>
 
 namespace walle {
@@ -43,13 +44,7 @@ private:
   lv_display_t *display;
   uint8_t *buffer = nullptr;
   esp_timer_handle_t lvgl_timer = nullptr;
-  lv_obj_t *screen;
-  lv_obj_t *status_bar;
-  lv_obj_t *battery_label;
-  lv_obj_t *wifi_label;
-  lv_obj_t *time_label;
-  lv_obj_t *content;
-  lv_obj_t *main_label;
+  ui *_ui = nullptr;
 };
 } // namespace walle
 

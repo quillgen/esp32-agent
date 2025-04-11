@@ -1,0 +1,31 @@
+#ifndef __UI_H_
+#define __UI_H_
+
+#include <lvgl.h>
+
+namespace walle {
+class ui {
+public:
+  ui(lv_display_t *display);
+
+public:
+  void initialize();
+  void show_splash();
+  void show_main();
+
+private:
+  void create_splash_screen();
+
+private:
+  lv_display_t *display;
+  lv_obj_t *splash_screen;
+  lv_obj_t *main_screen;
+  lv_obj_t *status_bar;
+  lv_obj_t *battery_label;
+  lv_obj_t *wifi_label;
+  lv_obj_t *time_label;
+  lv_obj_t *main_label;
+};
+} // namespace walle
+
+#endif

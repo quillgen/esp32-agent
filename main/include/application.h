@@ -16,12 +16,8 @@ enum app_state {
   unknown,
   starting,
   configuring_wifi,
+  sntp,
   idle,
-  connecting,
-  listening,
-  speaking,
-  upgrading,
-  activiting,
   error,
 };
 

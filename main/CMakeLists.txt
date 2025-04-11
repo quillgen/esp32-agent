@@ -7,6 +7,7 @@ set(SOURCES "src/led/fast_hsv2rgb_32bit.c"
     "src/display/ssd1306_i2c.cpp"
     "src/display/cascadia_code_14.c"
     "src/display/wqy_st_12.c"
+    "src/display/ui.cpp"
     "src/application.cpp"
     "main.cpp"
 )
