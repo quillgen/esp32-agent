@@ -18,10 +18,10 @@ enum ssd1306_type {
   spi,
 };
 
-class ssd1306_oled : public Device {
+class Ssd1306Oled : public Device {
 public:
-  ssd1306_oled();
-  virtual ~ssd1306_oled();
+  Ssd1306Oled();
+  virtual ~Ssd1306Oled();
 
 public:
   void init() override;
@@ -40,11 +40,11 @@ private:
   void update_time();
 
 private:
-  esp_lcd_panel_handle_t panel_handle;
-  lv_display_t *display;
-  uint8_t *buffer = nullptr;
-  esp_timer_handle_t lvgl_timer = nullptr;
-  ui *_ui = nullptr;
+  esp_lcd_panel_handle_t panel_handle_;
+  lv_display_t *display_;
+  uint8_t *buffer_ = nullptr;
+  esp_timer_handle_t lvgl_timer_ = nullptr;
+  ui *ui_ = nullptr;
 };
 } // namespace agent
 

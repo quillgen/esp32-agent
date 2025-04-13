@@ -9,7 +9,7 @@ static const char *TAG = "oled";
 #define I2C_SDA_PIN 4
 #define I2C_SCL_PIN 5
 
-void ssd1306_oled_i2c::configure_i2c() {
+void Ssd1306OledI2c::configure_i2c() {
   i2c_master_bus_config_t bus_cfg = {
       .i2c_port = (i2c_port_t)0,
       .sda_io_num = (gpio_num_t)I2C_SDA_PIN,
@@ -23,11 +23,11 @@ void ssd1306_oled_i2c::configure_i2c() {
               .enable_internal_pullup = 1,
           },
   };
-  ESP_ERROR_CHECK(i2c_new_master_bus(&bus_cfg, &this->i2c_bus));
+  ESP_ERROR_CHECK(i2c_new_master_bus(&bus_cfg, &i2c_bus_));
 }
 
-void ssd1306_oled_i2c::configure_io_bus() {
-  this->configure_i2c();
+void Ssd1306OledI2c::configure_io_bus() {
+  configure_i2c();
 
   esp_lcd_panel_io_i2c_config_t io_config = {
       .dev_addr = 0x3C,
@@ -46,5 +46,5 @@ void ssd1306_oled_i2c::configure_io_bus() {
   };
 
   ESP_ERROR_CHECK(
-      esp_lcd_new_panel_io_i2c_v2(this->i2c_bus, &io_config, &this->io_handle));
+      esp_lcd_new_panel_io_i2c_v2(i2c_bus_, &io_config, &io_handle));
 }

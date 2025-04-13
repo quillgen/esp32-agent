@@ -5,7 +5,7 @@
 
 namespace agent {
 
-class ssd1306_oled_i2c : public ssd1306_oled {
+class Ssd1306OledI2c : public Ssd1306Oled {
 protected:
   void configure_io_bus() override;
 
@@ -13,8 +13,7 @@ private:
   void configure_i2c();
 
 private:
-  i2c_master_bus_handle_t i2c_bus = nullptr;
-  esp_lcd_panel_handle_t panel_handle = nullptr;
+  i2c_master_bus_handle_t i2c_bus_ = nullptr;
 };
 } // namespace agent
 

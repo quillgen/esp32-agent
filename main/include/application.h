@@ -53,7 +53,7 @@ private:
   Led *led_ = nullptr;
   network *network_ = nullptr;
   speaker *speaker_ = nullptr;
-  ssd1306_oled *oled_ = nullptr;
+  Ssd1306Oled *oled_ = nullptr;
   EventGroupHandle_t event_group_ = nullptr;
 };
 } // namespace agent

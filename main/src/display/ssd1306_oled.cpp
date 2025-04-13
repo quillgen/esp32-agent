@@ -27,20 +27,20 @@ static _lock_t lvgl_api_lock;
 size_t buffer_size = (OLED_WIDTH * OLED_HEIGHT) / 8 + PALETTE_SIZE;
 static uint8_t oled_buffer[OLED_WIDTH * OLED_HEIGHT / 8];
 
-ssd1306_oled::ssd1306_oled() {
-  this->buffer = new uint8_t[buffer_size]{};
-  this->_ui = new ui(this->display);
+Ssd1306Oled::Ssd1306Oled() {
+  buffer_ = new uint8_t[buffer_size]{};
+  ui_ = new ui(display_);
 }
 
-ssd1306_oled::~ssd1306_oled() {
-  if (this->display != nullptr) {
-    delete this->display;
+Ssd1306Oled::~Ssd1306Oled() {
+  if (display_ != nullptr) {
+    delete display_;
   }
-  if (this->_ui != nullptr) {
-    delete this->_ui;
+  if (ui_ != nullptr) {
+    delete ui_;
   }
 
-  delete[] buffer;
+  delete[] buffer_;
 }
 
 static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t io_panel,
@@ -90,23 +90,23 @@ static void lvgl_flush_callback(lv_display_t *disp, const lv_area_t *area,
   esp_lcd_panel_draw_bitmap(panel_handle, x1, y1, x2 + 1, y2 + 1, oled_buffer);
 }
 
-void ssd1306_oled::init() {
-  this->configure_io_bus();
-  this->init_oled();
+void Ssd1306Oled::init() {
+  configure_io_bus();
+  init_oled();
 
   lv_init();
-  this->display = lv_display_create(OLED_WIDTH, OLED_HEIGHT);
-  lv_display_set_user_data(this->display, this->panel_handle);
-  lv_display_set_color_format(this->display, LV_COLOR_FORMAT_I1);
-  lv_display_set_buffers(this->display, this->buffer, NULL, buffer_size,
+  display_ = lv_display_create(OLED_WIDTH, OLED_HEIGHT);
+  lv_display_set_user_data(display_, panel_handle_);
+  lv_display_set_color_format(display_, LV_COLOR_FORMAT_I1);
+  lv_display_set_buffers(display_, buffer_, NULL, buffer_size,
                          LV_DISPLAY_RENDER_MODE_FULL);
-  lv_display_set_flush_cb(display, lvgl_flush_callback);
+  lv_display_set_flush_cb(display_, lvgl_flush_callback);
 
   const esp_lcd_panel_io_callbacks_t cbs = {
       .on_color_trans_done = notify_lvgl_flush_ready,
   };
   /* Register done callback */
-  esp_lcd_panel_io_register_event_callbacks(io_handle, &cbs, display);
+  esp_lcd_panel_io_register_event_callbacks(io_handle, &cbs, display_);
 
   esp_timer_create_args_t timer_args = {
       .callback = [](void *arg) { lv_tick_inc(LVGL_TICK_PERIOD_MS); },
@@ -114,9 +114,9 @@ void ssd1306_oled::init() {
       .name = "lvgl_tick",
       .skip_unhandled_events = false,
   };
-  ESP_ERROR_CHECK(esp_timer_create(&timer_args, &this->lvgl_timer));
+  ESP_ERROR_CHECK(esp_timer_create(&timer_args, &lvgl_timer_));
   ESP_ERROR_CHECK(
-      esp_timer_start_periodic(this->lvgl_timer, LVGL_TICK_PERIOD_MS * 1000));
+      esp_timer_start_periodic(lvgl_timer_, LVGL_TICK_PERIOD_MS * 1000));
 
   /*
     E (7026) task_wdt: Task watchdog got triggered. The following tasks/users
@@ -126,11 +126,11 @@ void ssd1306_oled::init() {
     */
   xTaskCreate(
       [](void *arg) {
-        ssd1306_oled *self = static_cast<ssd1306_oled *>(arg);
+        Ssd1306Oled *self = static_cast<Ssd1306Oled *>(arg);
         uint32_t time_till_next_ms = 0;
         while (1) {
           _lock_acquire(&lvgl_api_lock);
-          self->_ui->on_lv_tick();
+          self->ui_->on_lv_tick();
 
           time_till_next_ms = lv_timer_handler();
           if (time_till_next_ms == LV_NO_TIMER_READY)
@@ -141,12 +141,12 @@ void ssd1306_oled::init() {
       },
       "LVGL", 4096 * 2, this, 0, NULL);
 
-  this->_ui->initialize();
-  this->_ui->show_splash();
+  ui_->initialize();
+  ui_->show_splash();
 }
 
-void ssd1306_oled::init_oled() {
-  assert(this->io_handle);
+void Ssd1306Oled::init_oled() {
+  assert(io_handle);
   esp_lcd_panel_dev_config_t panel_config = {
       .reset_gpio_num = -1,
 
@@ -157,33 +157,33 @@ void ssd1306_oled::init_oled() {
   };
   panel_config.vendor_config = &ssd1306_config;
 
-  ESP_ERROR_CHECK(esp_lcd_new_panel_ssd1306(this->io_handle, &panel_config,
-                                            &this->panel_handle));
-  ESP_ERROR_CHECK(esp_lcd_panel_reset(this->panel_handle));
-  ESP_ERROR_CHECK(esp_lcd_panel_init(this->panel_handle));
+  ESP_ERROR_CHECK(
+      esp_lcd_new_panel_ssd1306(io_handle, &panel_config, &panel_handle_));
+  ESP_ERROR_CHECK(esp_lcd_panel_reset(panel_handle_));
+  ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle_));
 
-  this->flip_screen();
-  ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(this->panel_handle, true));
+  flip_screen();
+  ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle_, true));
 }
 
-void ssd1306_oled::flip_screen() {
+void Ssd1306Oled::flip_screen() {
   /**
    * see: https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf
    *  - 10.1.8  Set Segment Re-map (A0h/A1h)
    *  - 10.1.14 Set COM Output Scan Direction (C0h/C8h)
    *
    * or if the hardware does not support flipping, could use:
-   * esp_lcd_panel_mirror(this->panel_handle, true, true);
+   * esp_lcd_panel_mirror(panel_handle, true, true);
    */
 
   esp_lcd_panel_io_tx_param(io_handle, 0xA1, (uint8_t[]){0x01}, 1);
   esp_lcd_panel_io_tx_param(io_handle, 0xC8, (uint8_t[]){0x08}, 1);
 }
 
-void ssd1306_oled::clear() {
+void Ssd1306Oled::clear() {
   uint8_t buffer[OLED_WIDTH * OLED_HEIGHT / 8] = {0};
   memset(buffer, 0xAA, sizeof(buffer));
-  esp_lcd_panel_draw_bitmap(panel_handle, 0, 0, OLED_WIDTH, OLED_HEIGHT,
+  esp_lcd_panel_draw_bitmap(panel_handle_, 0, 0, OLED_WIDTH, OLED_HEIGHT,
                             buffer);
 }
 

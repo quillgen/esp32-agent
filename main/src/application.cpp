@@ -13,7 +13,7 @@ Application::Application() {
   led_ = new RgbLed((gpio_num_t)CONFIG_BLINK_GPIO);
   network_ = new network(event_group_);
   speaker_ = new speaker();
-  oled_ = new ssd1306_oled_i2c();
+  oled_ = new Ssd1306OledI2c();
 }
 
 Application::~Application() {
