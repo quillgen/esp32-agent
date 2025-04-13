@@ -3,7 +3,7 @@
 
 #include "ssd1306_oled.h"
 
-namespace walle {
+namespace agent {
 
 class ssd1306_oled_i2c : public ssd1306_oled {
 protected:
@@ -16,6 +16,6 @@ private:
   i2c_master_bus_handle_t i2c_bus = nullptr;
   esp_lcd_panel_handle_t panel_handle = nullptr;
 };
-} // namespace walle
+} // namespace agent
 
 #endif

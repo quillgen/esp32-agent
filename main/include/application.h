@@ -7,12 +7,14 @@
 
 #include "audio/speaker.h"
 #include "display/ssd1306_oled.h"
+#include "event.h"
 #include "led/led.h"
+#include "mutex.h"
 #include "network.h"
 
-namespace walle {
+namespace agent {
 
-enum app_state {
+enum AppState {
   unknown,
   starting,
   configuring_wifi,
@@ -21,39 +23,39 @@ enum app_state {
   error,
 };
 
-class application {
+class Application {
 public:
-  static application &instance() {
-    static application INSTANCE;
-    return INSTANCE;
+  static Application &instance() {
+    static Application kInstance;
+    return kInstance;
   }
 
 public:
-  application(const application &) = delete;
-  application &operator=(const application &) = delete;
+  Application(const Application &) = delete;
+  Application &operator=(const Application &) = delete;
 
 public:
-  inline app_state get_state() { return this->state; }
+  inline AppState get_state() { return this->state_; }
 
   void start();
   void reboot();
 
 private:
-  application();
-  ~application();
+  Application();
+  ~Application();
 
 private:
   void main_loop();
-  void set_state(app_state state);
+  void set_state(AppState state);
 
 private:
-  volatile app_state state = unknown;
-  led *_led = nullptr;
-  network *_network = nullptr;
-  speaker *_speaker = nullptr;
-  ssd1306_oled *oled = nullptr;
-  EventGroupHandle_t event_group = nullptr;
+  AppState state_ = unknown;
+  Led *led_ = nullptr;
+  network *network_ = nullptr;
+  speaker *speaker_ = nullptr;
+  ssd1306_oled *oled_ = nullptr;
+  EventGroupHandle_t event_group_ = nullptr;
 };
-} // namespace walle
+} // namespace agent
 
 #endif

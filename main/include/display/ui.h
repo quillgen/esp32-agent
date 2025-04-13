@@ -3,7 +3,7 @@
 
 #include <lvgl.h>
 
-namespace walle {
+namespace agent {
 class ui {
 public:
   ui(lv_display_t *display);
@@ -31,6 +31,6 @@ private:
   lv_obj_t *time_label;
   lv_obj_t *main_label;
 };
-} // namespace walle
+} // namespace agent
 
 #endif

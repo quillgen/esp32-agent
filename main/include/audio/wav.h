@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace walle {
+namespace agent {
 // WAV header structure (44 bytes total)
 #pragma pack(push, 1) // Disable struct padding to match binary layout
 typedef struct {
@@ -27,6 +27,6 @@ typedef struct {
   uint32_t data_subchunk_size; // Size of raw audio data
 } wav_header_t;
 #pragma pack(pop) // Restore default struct padding
-} // namespace walle
+} // namespace agent
 
 #endif

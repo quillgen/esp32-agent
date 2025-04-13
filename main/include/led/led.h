@@ -1,19 +1,17 @@
 #ifndef __LED_H_
 #define __LED_H_
 
-namespace walle {
-class led {
+#include "device.h"
+
+namespace agent {
+class Led : public Device {
 public:
-  virtual ~led() = default;
+  virtual ~Led() = default;
 
 public:
   virtual void on_state_changed() = 0;
+  void init() override {}
 };
-
-class no_led : public led {
-public:
-  virtual void on_state_changed() override {}
-};
-} // namespace walle
+} // namespace agent
 
 #endif

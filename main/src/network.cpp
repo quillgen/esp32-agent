@@ -5,7 +5,7 @@
 #include <esp_sntp.h>
 #include <esp_wifi.h>
 
-using namespace walle;
+using namespace agent;
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1

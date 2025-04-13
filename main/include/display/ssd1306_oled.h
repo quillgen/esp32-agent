@@ -12,13 +12,13 @@
 #include "ui.h"
 #include <functional>
 
-namespace walle {
+namespace agent {
 enum ssd1306_type {
   iic,
   spi,
 };
 
-class ssd1306_oled : public device {
+class ssd1306_oled : public Device {
 public:
   ssd1306_oled();
   virtual ~ssd1306_oled();
@@ -46,6 +46,6 @@ private:
   esp_timer_handle_t lvgl_timer = nullptr;
   ui *_ui = nullptr;
 };
-} // namespace walle
+} // namespace agent
 
 #endif

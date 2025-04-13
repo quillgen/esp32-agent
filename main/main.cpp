@@ -7,7 +7,7 @@
 #include "application.h"
 #include "flash.h"
 
-using namespace walle;
+using namespace agent;
 
 static const char *TAG = "𓃰 main";
 
@@ -29,7 +29,7 @@ extern "C" void app_main(void) {
 
   init_flash();
 
-  application::instance().start();
+  Application::instance().start();
 
   while (1) {
     vTaskDelay(100);

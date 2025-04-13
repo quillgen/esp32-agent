@@ -5,17 +5,43 @@
 #include <math.h>
 #include <stdio.h>
 
-using namespace walle;
+using namespace agent;
 
-#define TAG "RgbLed"
+#define TAG "led"
 
 const float PI = 3.14159265f;
 const float HUE_SPEED = 3.0f;      // 色相变化速度（度/循环周期）
 const float BREATHE_SPEED = 0.03f; // 呼吸速度（相位增量/循环周期）
 
-rgb_led::rgb_led(gpio_num_t pin) : pin(pin) {
+RgbLed::RgbLed(gpio_num_t pin) : pin_(pin) {
+
+  esp_timer_create_args_t strip_timer_args = {
+      .callback =
+          [](void *arg) {
+            auto self = static_cast<RgbLed *>(arg);
+            std::lock_guard<std::mutex> lock(self->mutex_);
+            if (self->strip_callback_ != nullptr) {
+              self->strip_callback_();
+            }
+          },
+      .arg = this,
+      .dispatch_method = ESP_TIMER_TASK,
+      .name = "strip_timer",
+      .skip_unhandled_events = false,
+  };
+  ESP_ERROR_CHECK(esp_timer_create(&strip_timer_args, &strip_timer_));
+}
+
+RgbLed::~RgbLed() {
+  esp_timer_stop(strip_timer_);
+  if (led_strip_ != nullptr) {
+    led_strip_del(led_strip_);
+  }
+}
+
+void RgbLed::init() {
   led_strip_config_t strip_config = {
-      .strip_gpio_num = this->pin,
+      .strip_gpio_num = pin_,
       .max_leds = 1,
       .led_model = LED_MODEL_WS2812,
       .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB,
@@ -32,42 +58,19 @@ rgb_led::rgb_led(gpio_num_t pin) : pin(pin) {
           },
   };
   ESP_ERROR_CHECK(
-      led_strip_new_rmt_device(&strip_config, &rmt_config, &this->led_strip));
-  led_strip_clear(this->led_strip);
-
-  esp_timer_create_args_t strip_timer_args = {
-      .callback =
-          [](void *arg) {
-            auto strip = static_cast<rgb_led *>(arg);
-            std::lock_guard<std::mutex> lock(strip->mutex);
-            if (strip->strip_callback != nullptr) {
-              strip->strip_callback();
-            }
-          },
-      .arg = this,
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "strip_timer",
-      .skip_unhandled_events = false,
-  };
-  ESP_ERROR_CHECK(esp_timer_create(&strip_timer_args, &this->strip_timer));
+      led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip_));
+  led_strip_clear(led_strip_);
 }
 
-rgb_led::~rgb_led() {
-  esp_timer_stop(this->strip_timer);
-  if (this->led_strip != nullptr) {
-    led_strip_del(this->led_strip);
-  }
-}
-
-void rgb_led::on_state_changed() {
-  auto &app = application::instance();
+void RgbLed::on_state_changed() {
+  auto &app = Application::instance();
   auto state = app.get_state();
-  ESP_LOGI(TAG, "Received app state change: %d", state);
+  ESP_LOGI(TAG, "received app state change: %d", state);
   switch (state) {
   case starting:
     // breathe(20);
-    led_strip_set_pixel(this->led_strip, 0, 1, 1, 1);
-    led_strip_refresh(this->led_strip);
+    led_strip_set_pixel(led_strip_, 0, 1, 1, 1);
+    led_strip_refresh(led_strip_);
     break;
 
   default:
@@ -75,52 +78,52 @@ void rgb_led::on_state_changed() {
   }
 }
 
-void rgb_led::show(uint8_t r, uint8_t g, uint8_t b) {
-  std::lock_guard<std::mutex> lock(this->mutex);
-  ESP_LOGI(TAG, "Set led to rgb mode");
-  led_strip_set_pixel(this->led_strip, 0, r, g, b);
-  led_strip_refresh(this->led_strip);
+void RgbLed::show(uint8_t r, uint8_t g, uint8_t b) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  ESP_LOGI(TAG, "set led to rgb mode");
+  led_strip_set_pixel(led_strip_, 0, r, g, b);
+  led_strip_refresh(led_strip_);
 }
 
-void rgb_led::blink(uint8_t r, uint8_t g, uint8_t b, int interval_ms) {
-  this->blink_color = rgb_color{r, g, b};
+void RgbLed::blink(uint8_t r, uint8_t g, uint8_t b, int interval_ms) {
+  blink_color_ = rgb_color{r, g, b};
   start_timer(interval_ms, [this]() {
-    ESP_LOGI(TAG, "blinking...%d", this->blink_state);
-    if (this->blink_state) {
-      auto color = this->blink_color;
-      led_strip_set_pixel(this->led_strip, 0, color.r, color.g, color.b);
-      led_strip_refresh(this->led_strip);
+    ESP_LOGI(TAG, "blinking...%d", blink_state_);
+    if (blink_state_) {
+      auto color = blink_color_;
+      led_strip_set_pixel(led_strip_, 0, color.r, color.g, color.b);
+      led_strip_refresh(led_strip_);
     } else {
-      led_strip_clear(this->led_strip);
+      led_strip_clear(led_strip_);
     }
-    this->blink_state = !this->blink_state;
+    blink_state_ = !blink_state_;
   });
 }
 
-void rgb_led::breathe(int interval_ms) {
+void RgbLed::breathe(int interval_ms) {
   start_timer(interval_ms, [this]() {
-    float brightness = (sin(phase) + 1) * 127.5f;
+    float brightness = (sin(phase_) + 1) * 127.5f;
     uint8_t r, g, b;
-    fast_hsv2rgb_32bit(hue, saturation, (uint8_t)roundf(brightness), &r, &g,
+    fast_hsv2rgb_32bit(hue_, saturation_, (uint8_t)roundf(brightness), &r, &g,
                        &b);
-    led_strip_set_pixel(this->led_strip, 0, r, g, b);
-    led_strip_refresh(this->led_strip);
+    led_strip_set_pixel(led_strip_, 0, r, g, b);
+    led_strip_refresh(led_strip_);
 
     // 更新色相和呼吸相位
-    this->hue = (uint16_t)(this->hue + HUE_SPEED) % HSV_HUE_MAX;
-    this->phase = fmod(this->phase + BREATHE_SPEED, 2 * PI);
+    hue_ = (uint16_t)(hue_ + HUE_SPEED) % HSV_HUE_MAX;
+    phase_ = fmod(phase_ + BREATHE_SPEED, 2 * PI);
   });
 }
 
-void rgb_led::turn_off() {}
+void RgbLed::turn_off() {}
 
-void rgb_led::start_timer(int interval_ms, std::function<void()> callback) {
-  if (this->led_strip == nullptr) {
+void RgbLed::start_timer(int interval_ms, std::function<void()> callback) {
+  if (led_strip_ == nullptr) {
     return;
   }
-  std::lock_guard<std::mutex> lock(this->mutex);
-  esp_timer_stop(this->strip_timer);
-  this->strip_callback = callback;
-  esp_timer_start_periodic(this->strip_timer, interval_ms * 1000);
+  std::lock_guard<std::mutex> lock(mutex_);
+  esp_timer_stop(strip_timer_);
+  strip_callback_ = callback;
+  esp_timer_start_periodic(strip_timer_, interval_ms * 1000);
   ESP_LOGI(TAG, "LED timer started");
 }

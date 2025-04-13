@@ -2,7 +2,7 @@
 
 #include <driver/i2c_master.h>
 
-using namespace walle;
+using namespace agent;
 
 static const char *TAG = "oled";
 

@@ -3,7 +3,7 @@
 #include <ctime>
 #include <lv_init.h>
 
-using namespace walle;
+using namespace agent;
 
 static const char *TAG = "ui";
 

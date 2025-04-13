@@ -6,7 +6,7 @@
 
 static const char *TAG = "🤖 FLASH";
 
-void walle::init_flash() {
+void agent::init_flash() {
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
       ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {

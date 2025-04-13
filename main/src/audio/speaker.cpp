@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-using namespace walle;
+using namespace agent;
 
 #define TAG "🤖 Audio"
 
@@ -102,7 +102,7 @@ esp_err_t speaker::http_event_handler(esp_http_client_event_t *e) {
 void speaker::test() {
   /**
    * generate test audio:
-   * ffmpeg -i 1.mp3 -ar 16000 -ac 1 -acodec pcm_s16le 1.wav
+   * ffmpeg -i 1.mp3 -ar 16000 -ac 2 -acodec pcm_s16le 1.wav
    */
   xTaskCreate(speaker::http_stream_task, "http_stream", 4096 * 2, nullptr, 5,
               nullptr);

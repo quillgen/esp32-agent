@@ -3,7 +3,7 @@
 
 #include <esp_event.h>
 
-namespace walle {
+namespace agent {
 class network {
 public:
   network(EventGroupHandle_t e);
@@ -22,5 +22,5 @@ private:
   int retry_count = 0;
   EventGroupHandle_t event_group;
 };
-} // namespace walle
+} // namespace agent
 #endif

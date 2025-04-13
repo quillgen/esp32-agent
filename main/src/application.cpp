@@ -4,51 +4,53 @@
 #include "display/ssd1306_i2c.h"
 #include "led/rgb_led.h"
 
-using namespace walle;
+using namespace agent;
 
-#define TAG "🤖 APP"
+#define TAG "app"
 
-application::application() {
-  this->event_group = xEventGroupCreate();
-  this->_led = new rgb_led((gpio_num_t)CONFIG_BLINK_GPIO);
-  this->_network = new network(this->event_group);
-  this->_speaker = new speaker();
-  this->oled = new ssd1306_oled_i2c();
+Application::Application() {
+  event_group_ = xEventGroupCreate();
+  led_ = new RgbLed((gpio_num_t)CONFIG_BLINK_GPIO);
+  network_ = new network(event_group_);
+  speaker_ = new speaker();
+  oled_ = new ssd1306_oled_i2c();
 }
 
-application::~application() {
-  if (this->_led != nullptr)
-    delete this->_led;
-  if (this->_network != nullptr)
-    delete this->_network;
-  if (this->_speaker != nullptr)
-    delete this->_speaker;
-  if (this->oled != nullptr) {
-    delete this->oled;
+Application::~Application() {
+  if (led_ != nullptr)
+    delete led_;
+  if (network_ != nullptr)
+    delete network_;
+  if (speaker_ != nullptr)
+    delete speaker_;
+  if (oled_ != nullptr) {
+    delete oled_;
   }
-  vEventGroupDelete(this->event_group);
+  vEventGroupDelete(event_group_);
 }
 
-void application::start() {
-  this->oled->init();
+void Application::start() {
   set_state(starting);
-  this->_network->init_wifi();
-  this->_speaker->init_speaker();
-  this->_speaker->test();
+  led_->init();
+  oled_->init();
+  network_->init_wifi();
+  speaker_->init_speaker();
+  // speaker_->test();
 }
 
-void application::main_loop() {}
+void Application::main_loop() {}
 
-void application::set_state(app_state state) {
-  if (this->state == state) {
+void Application::set_state(AppState s) {
+
+  if (state_ == s) {
     return;
   }
-  this->state = state;
-  ESP_LOGI(TAG, "STATE: %d", this->state);
-  this->_led->on_state_changed();
+  state_ = s;
+  ESP_LOGI(TAG, "changed STATE: %d", state_);
+  led_->on_state_changed();
 }
 
-void application::reboot() {
-  ESP_LOGI(TAG, "Rebooting the application...");
+void Application::reboot() {
+  ESP_LOGI(TAG, "rebooting the application...");
   esp_restart();
 }

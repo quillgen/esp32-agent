@@ -10,7 +10,7 @@
 
 #include "display/lv_font.h"
 
-using namespace walle;
+using namespace agent;
 
 static const char *TAG = "oled";
 
