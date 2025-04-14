@@ -68,7 +68,11 @@ void RgbLed::init() {
 
 void RgbLed::on_state_changed(AppState s) {
   ESP_LOGI(TAG, "received app state change: %d", s);
+  clear();
   switch (s) {
+  case AppState::kWifiProvisioning:
+    blink(kWarningColor.r, kWarningColor.g, kWarningColor.b, 500);
+    break;
   case AppState::kIdle:
     show(kReadyColor.r, kReadyColor.g, kReadyColor.b);
     break;
@@ -117,6 +121,7 @@ void RgbLed::breathe(int interval_ms) {
 
 void RgbLed::turn_off() {}
 
+void RgbLed::clear() { esp_timer_stop(strip_timer_); }
 void RgbLed::start_timer(int interval_ms, std::function<void()> callback) {
   if (led_strip_ == nullptr) {
     return;

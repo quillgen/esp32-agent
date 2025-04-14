@@ -31,6 +31,7 @@ public:
 
 private:
   void start_timer(int interval_ms, std::function<void()> callback);
+  void clear();
 
 private:
   gpio_num_t pin_;
