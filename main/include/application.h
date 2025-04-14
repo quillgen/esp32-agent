@@ -36,6 +36,7 @@ private:
   ~Application();
 
 private:
+  void sync_time();
   void watch_state_changed();
   void main_loop();
   void set_state(AppState state);

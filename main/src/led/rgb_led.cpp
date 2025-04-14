@@ -70,7 +70,7 @@ void RgbLed::on_state_changed(AppState s) {
   ESP_LOGI(TAG, "received app state change: %d", s);
   clear();
   switch (s) {
-  case AppState::kWifiProvisioning:
+  case AppState::kNetworkConnecting:
     blink(kWarningColor.r, kWarningColor.g, kWarningColor.b, 500);
     break;
   case AppState::kIdle:

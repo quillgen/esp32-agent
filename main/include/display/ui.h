@@ -11,6 +11,8 @@ public:
 public:
   void initialize();
   void show_splash();
+  void set_network_connecting();
+  void set_nstp();
   void show_main();
   void on_lv_tick();
 
@@ -20,17 +22,16 @@ private:
   void update_time();
 
 private:
-  lv_display_t *display;
-  lv_obj_t *splash_screen;
-  lv_obj_t *progress_label;
-  lv_obj_t *logo;
-  lv_obj_t *logo_title;
-  lv_obj_t *main_screen;
-  lv_obj_t *status_bar;
-  lv_obj_t *battery_label;
-  lv_obj_t *wifi_label;
-  lv_obj_t *time_label;
-  lv_obj_t *main_label;
+  lv_display_t *display_;
+  lv_obj_t *splash_screen_;
+  lv_obj_t *progress_label_;
+  lv_obj_t *logo_;
+  lv_obj_t *main_screen_;
+  lv_obj_t *status_bar_;
+  lv_obj_t *battery_label_;
+  lv_obj_t *wifi_label_;
+  lv_obj_t *time_label_;
+  lv_obj_t *main_label_;
 };
 } // namespace agent
 

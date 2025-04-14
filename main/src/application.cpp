@@ -1,11 +1,18 @@
 #include "application.h"
 #include <esp_log.h>
+#include <esp_netif_sntp.h>
+#include <esp_sntp.h>
 
 #include "display/ssd1306_i2c.h"
 #include "event.h"
 #include "led/rgb_led.h"
 
 using namespace agent;
+
+static const int MAX_RETRY_COUNT = 3;
+
+#define NTP_SERVER_1 "ntp.aliyun.com"
+#define NTP_SERVER_2 "ntp.aliyun.com"
 
 #define TAG "app"
 
@@ -41,11 +48,59 @@ void Application::start() {
         self->watch_state_changed();
       },
       "LVGL", 4096, this, 0, NULL);
-  set_state(AppState::kWifiProvisioning);
+  set_state(AppState::kNetworkConnecting);
   network_->init_wifi();
+
+  EventBits_t bits =
+      xEventGroupWaitBits(event_group_, BIT_WIFI_CONNECTED | BIT_WIFI_FAILED,
+                          pdFALSE, pdFALSE, portMAX_DELAY);
+  if (bits & BIT_WIFI_CONNECTED) {
+    ESP_LOGI(TAG, "connected to ap");
+    set_state(AppState::kNstp);
+    sync_time();
+  } else if (bits & BIT_WIFI_FAILED) {
+    ESP_LOGE(TAG, "Failed to connect to SSID:%s, password:%s",
+             CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
+    set_state(AppState::kNetworkNotConnected);
+  } else {
+    ESP_LOGE(TAG, "UNEXPECTED EVENT");
+  }
   speaker_->init_speaker();
   set_state(AppState::kIdle);
   // speaker_->test();
+}
+
+void time_sync_notification_cb(struct timeval *tv) {
+  ESP_LOGI(TAG, "sntp time sync done!");
+}
+
+void Application::sync_time() {
+  set_state(AppState::kNstp);
+  esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG(NTP_SERVER_1);
+  config.sync_cb = time_sync_notification_cb;
+  esp_netif_sntp_init(&config);
+
+  int retry = 0;
+  const int max_retry = 15;
+  while (esp_netif_sntp_sync_wait(2000 / portTICK_PERIOD_MS) ==
+             ESP_ERR_TIMEOUT &&
+         ++retry < max_retry) {
+    ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry,
+             max_retry);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+  }
+
+  ESP_LOGI(TAG, "retry =%d", retry);
+
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+  setenv("TZ", "CST-8", 1);
+  tzset();
+  localtime_r(&now, &timeinfo);
+  char strftime_buf[64];
+  strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+  ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
 }
 
 void Application::main_loop() {}

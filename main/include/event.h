@@ -8,9 +8,10 @@
 namespace agent {
 enum AppState {
   kUnknown,
-  kWifiProvisioning,
+  kNetworkConnecting,
   kNstp,
   kIdle,
+  kNetworkNotConnected,
   kError,
 };
 }

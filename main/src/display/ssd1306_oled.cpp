@@ -147,8 +147,13 @@ void Ssd1306Oled::init() {
 
 void Ssd1306Oled::on_state_changed(AppState s) {
   switch (s) {
-  case AppState::kWifiProvisioning:
+  case AppState::kNetworkConnecting:
     ui_->show_splash();
+    ui_->set_network_connecting();
+    break;
+  case AppState::kNstp:
+    ui_->show_splash();
+    ui_->set_nstp();
     break;
   case AppState::kIdle:
     ui_->show_main();
