@@ -29,7 +29,7 @@ static uint8_t oled_buffer[OLED_WIDTH * OLED_HEIGHT / 8];
 
 Ssd1306Oled::Ssd1306Oled(EventGroupHandle_t e) : event_group_(e) {
   buffer_ = new uint8_t[buffer_size]{};
-  ui_ = new ui(display_);
+  ui_ = new Ui(display_);
 }
 
 Ssd1306Oled::~Ssd1306Oled() {
@@ -63,7 +63,7 @@ static void lvgl_flush_callback(lv_display_t *disp, const lv_area_t *area,
   int y1 = area->y1;
   int y2 = area->y2;
 
-  ESP_LOGI(TAG, "draw at: (%d, %d) (%d, %d)", x1, y1, x2, y2);
+  // ESP_LOGI(TAG, "draw at: (%d, %d) (%d, %d)", x1, y1, x2, y2);
 
   for (int y = y1; y <= y2; y++) {
     for (int x = x1; x <= x2; x++) {
@@ -145,11 +145,23 @@ void Ssd1306Oled::init() {
   ui_->show_splash();
 }
 
+void Ssd1306Oled::on_state_changed(AppState s) {
+  switch (s) {
+  case AppState::kWifiProvisioning:
+    ui_->show_splash();
+    break;
+  case AppState::kIdle:
+    ui_->show_main();
+    break;
+  default:
+    ui_->show_splash();
+    break;
+  }
+}
 void Ssd1306Oled::init_oled() {
   assert(io_handle);
   esp_lcd_panel_dev_config_t panel_config = {
       .reset_gpio_num = -1,
-
       .bits_per_pixel = 1,
   };
   esp_lcd_panel_ssd1306_config_t ssd1306_config = {

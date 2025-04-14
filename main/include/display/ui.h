@@ -4,9 +4,9 @@
 #include <lvgl.h>
 
 namespace agent {
-class ui {
+class Ui {
 public:
-  ui(lv_display_t *display);
+  Ui(lv_display_t *display);
 
 public:
   void initialize();
@@ -16,6 +16,7 @@ public:
 
 private:
   void create_splash_screen();
+  void create_main_screen();
   void update_time();
 
 private:

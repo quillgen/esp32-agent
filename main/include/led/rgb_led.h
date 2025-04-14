@@ -23,7 +23,7 @@ public:
 
 public:
   void init() override;
-  void on_state_changed() override;
+  void on_state_changed(AppState s) override;
   void show(uint8_t r, uint8_t g, uint8_t b);
   void blink(uint8_t r, uint8_t g, uint8_t b, int interval_ms);
   void breathe(int interval_ms);

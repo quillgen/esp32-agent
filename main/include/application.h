@@ -14,15 +14,6 @@
 
 namespace agent {
 
-enum AppState {
-  unknown,
-  starting,
-  configuring_wifi,
-  sntp,
-  idle,
-  error,
-};
-
 class Application {
 public:
   static Application &instance() {
@@ -45,11 +36,12 @@ private:
   ~Application();
 
 private:
+  void watch_state_changed();
   void main_loop();
   void set_state(AppState state);
 
 private:
-  AppState state_ = unknown;
+  AppState state_ = AppState::kUnknown;
   Led *led_ = nullptr;
   network *network_ = nullptr;
   speaker *speaker_ = nullptr;

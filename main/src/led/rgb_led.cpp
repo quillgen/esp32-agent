@@ -13,6 +13,10 @@ const float PI = 3.14159265f;
 const float HUE_SPEED = 3.0f;      // 色相变化速度（度/循环周期）
 const float BREATHE_SPEED = 0.03f; // 呼吸速度（相位增量/循环周期）
 
+const RgbColor kErrorColor = RgbColor(10, 0, 0);
+const RgbColor kReadyColor = RgbColor(0, 10, 0);
+const RgbColor kWarningColor = RgbColor(0, 0, 10);
+
 RgbLed::RgbLed(gpio_num_t pin) : pin_(pin) {
 
   esp_timer_create_args_t strip_timer_args = {
@@ -62,18 +66,14 @@ void RgbLed::init() {
   led_strip_clear(led_strip_);
 }
 
-void RgbLed::on_state_changed() {
-  auto &app = Application::instance();
-  auto state = app.get_state();
-  ESP_LOGI(TAG, "received app state change: %d", state);
-  switch (state) {
-  case starting:
-    // breathe(20);
-    led_strip_set_pixel(led_strip_, 0, 1, 1, 1);
-    led_strip_refresh(led_strip_);
+void RgbLed::on_state_changed(AppState s) {
+  ESP_LOGI(TAG, "received app state change: %d", s);
+  switch (s) {
+  case AppState::kIdle:
+    show(kReadyColor.r, kReadyColor.g, kReadyColor.b);
     break;
-
   default:
+    show(kErrorColor.r, kErrorColor.g, kErrorColor.b);
     break;
   }
 }
@@ -124,6 +124,6 @@ void RgbLed::start_timer(int interval_ms, std::function<void()> callback) {
   std::lock_guard<std::mutex> lock(mutex_);
   esp_timer_stop(strip_timer_);
   strip_callback_ = callback;
-  esp_timer_start_periodic(strip_timer_, interval_ms * 1000);
+  esp_timer_start_periodic(strip_timer_, interval_ms * 500);
   ESP_LOGI(TAG, "LED timer started");
 }

@@ -10,6 +10,7 @@
 #include <lvgl.h>
 
 #include "device.h"
+#include "event.h"
 #include "ui.h"
 #include <functional>
 
@@ -26,6 +27,7 @@ public:
 
 public:
   void init() override;
+  void on_state_changed(AppState s);
   void turn_on();
   void turn_off();
   void clear();
@@ -46,7 +48,7 @@ private:
   lv_display_t *display_;
   uint8_t *buffer_ = nullptr;
   esp_timer_handle_t lvgl_timer_ = nullptr;
-  ui *ui_ = nullptr;
+  Ui *ui_ = nullptr;
 };
 } // namespace agent
 

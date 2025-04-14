@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 14 px
  * Bpp: 1
- * Opts: --bpp 1 --size 14 --no-compress --font CaskaydiaMonoNerdFontMono-Regular.ttf --range 32-126,0xF1EB,0xF240,0xF0F3 --format lvgl --force-fast-kern-format -o ../main/src/display/cascadia_code_14.c
+ * Opts: --bpp 1 --size 14 --no-compress --font ./assets/CaskaydiaMonoNerdFontMono-Regular.ttf --range 32-126,0xF1EB,0xF240,0xF0F3 --format lvgl --force-fast-kern-format -o ./main/src/display/cascadia_code_14.c
  ******************************************************************************/
 
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
