@@ -27,7 +27,7 @@ static _lock_t lvgl_api_lock;
 size_t buffer_size = (OLED_WIDTH * OLED_HEIGHT) / 8 + PALETTE_SIZE;
 static uint8_t oled_buffer[OLED_WIDTH * OLED_HEIGHT / 8];
 
-Ssd1306Oled::Ssd1306Oled() {
+Ssd1306Oled::Ssd1306Oled(EventGroupHandle_t e) : event_group_(e) {
   buffer_ = new uint8_t[buffer_size]{};
   ui_ = new ui(display_);
 }

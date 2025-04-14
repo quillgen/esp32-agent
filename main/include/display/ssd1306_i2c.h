@@ -6,6 +6,9 @@
 namespace agent {
 
 class Ssd1306OledI2c : public Ssd1306Oled {
+public:
+  Ssd1306OledI2c(EventGroupHandle_t e) : Ssd1306Oled(e) {}
+
 protected:
   void configure_io_bus() override;
 

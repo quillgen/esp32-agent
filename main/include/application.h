@@ -55,6 +55,7 @@ private:
   speaker *speaker_ = nullptr;
   Ssd1306Oled *oled_ = nullptr;
   EventGroupHandle_t event_group_ = nullptr;
+  Mutex mutex_;
 };
 } // namespace agent
 

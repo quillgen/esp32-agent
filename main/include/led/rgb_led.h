@@ -10,7 +10,7 @@
 #include "led.h"
 
 namespace agent {
-struct rgb_color {
+struct RgbColor {
   uint8_t r;
   uint8_t g;
   uint8_t b;
@@ -39,7 +39,7 @@ private:
   std::mutex mutex_;
   std::function<void()> strip_callback_ = nullptr;
   bool blink_state_ = false;
-  rgb_color blink_color_ = {};
+  RgbColor blink_color_ = {};
   uint16_t phase_ = 0;
   uint16_t hue_ = 0;
   uint8_t saturation_ = 255;

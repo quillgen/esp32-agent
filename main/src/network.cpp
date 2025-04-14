@@ -1,14 +1,12 @@
 #include "network.h"
 
+#include "event.h"
 #include <esp_log.h>
 #include <esp_netif_sntp.h>
 #include <esp_sntp.h>
 #include <esp_wifi.h>
 
 using namespace agent;
-
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT BIT1
 
 #define NTP_SERVER_1 "ntp.aliyun.com"
 #define NTP_SERVER_2 "ntp.aliyun.com"
@@ -42,14 +40,14 @@ void network::event_handler(esp_event_base_t event_base, int32_t event_id,
       esp_wifi_connect();
       this->retry_count++;
     } else {
-      xEventGroupSetBits(this->event_group, WIFI_FAIL_BIT);
+      xEventGroupSetBits(this->event_group, BIT_WIFI_FAILED);
     }
     ESP_LOGE(TAG, "wifi disconnected");
   } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
     this->retry_count = 0;
-    xEventGroupSetBits(this->event_group, WIFI_CONNECTED_BIT);
+    xEventGroupSetBits(this->event_group, BIT_WIFI_CONNECTED);
   }
 }
 
@@ -86,10 +84,10 @@ void network::init_wifi() {
 
   ESP_LOGI(TAG, "wifi initialized");
 
-  EventBits_t bits =
-      xEventGroupWaitBits(this->event_group, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                          pdFALSE, pdFALSE, portMAX_DELAY);
-  if (bits & WIFI_CONNECTED_BIT) {
+  EventBits_t bits = xEventGroupWaitBits(this->event_group,
+                                         BIT_WIFI_CONNECTED | BIT_WIFI_FAILED,
+                                         pdFALSE, pdFALSE, portMAX_DELAY);
+  if (bits & BIT_WIFI_CONNECTED) {
     ESP_LOGI(TAG, "connected to ap");
     this->sync_time();
 
@@ -116,7 +114,7 @@ void network::init_wifi() {
     ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
 
     // esp_netif_sntp_deinit();
-  } else if (bits & WIFI_FAIL_BIT) {
+  } else if (bits & BIT_WIFI_FAILED) {
     ESP_LOGE(TAG, "Failed to connect to SSID:%s, password:%s",
              CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
   } else {

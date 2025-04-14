@@ -2,6 +2,7 @@
 #include <esp_log.h>
 
 #include "display/ssd1306_i2c.h"
+#include "event.h"
 #include "led/rgb_led.h"
 
 using namespace agent;
@@ -13,7 +14,7 @@ Application::Application() {
   led_ = new RgbLed((gpio_num_t)CONFIG_BLINK_GPIO);
   network_ = new network(event_group_);
   speaker_ = new speaker();
-  oled_ = new Ssd1306OledI2c();
+  oled_ = new Ssd1306OledI2c(event_group_);
 }
 
 Application::~Application() {
@@ -41,13 +42,15 @@ void Application::start() {
 void Application::main_loop() {}
 
 void Application::set_state(AppState s) {
-
   if (state_ == s) {
     return;
   }
-  state_ = s;
-  ESP_LOGI(TAG, "changed STATE: %d", state_);
-  led_->on_state_changed();
+  if (mutex_.lock(pdMS_TO_TICKS(100))) {
+    state_ = s;
+    ESP_LOGI(TAG, "changed STATE: %d", state_);
+    xEventGroupSetBits(event_group_, BIT_APP_STATE_CHANGED);
+    mutex_.unlock();
+  }
 }
 
 void Application::reboot() {

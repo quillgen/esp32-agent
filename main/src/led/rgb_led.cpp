@@ -86,7 +86,7 @@ void RgbLed::show(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 void RgbLed::blink(uint8_t r, uint8_t g, uint8_t b, int interval_ms) {
-  blink_color_ = rgb_color{r, g, b};
+  blink_color_ = RgbColor{r, g, b};
   start_timer(interval_ms, [this]() {
     ESP_LOGI(TAG, "blinking...%d", blink_state_);
     if (blink_state_) {

@@ -6,6 +6,7 @@
 #include <esp_lcd_panel_ssd1306.h>
 #include <esp_lcd_panel_vendor.h>
 #include <esp_timer.h>
+#include <freertos/event_groups.h>
 #include <lvgl.h>
 
 #include "device.h"
@@ -13,14 +14,14 @@
 #include <functional>
 
 namespace agent {
-enum ssd1306_type {
+enum OledType {
   iic,
   spi,
 };
 
 class Ssd1306Oled : public Device {
 public:
-  Ssd1306Oled();
+  Ssd1306Oled(EventGroupHandle_t e);
   virtual ~Ssd1306Oled();
 
 public:
@@ -40,6 +41,7 @@ private:
   void update_time();
 
 private:
+  EventGroupHandle_t event_group_;
   esp_lcd_panel_handle_t panel_handle_;
   lv_display_t *display_;
   uint8_t *buffer_ = nullptr;
