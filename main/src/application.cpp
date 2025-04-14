@@ -67,7 +67,7 @@ void Application::start() {
   }
   speaker_->init_speaker();
   set_state(AppState::kIdle);
-  // speaker_->test();
+  speaker_->test();
 }
 
 void time_sync_notification_cb(struct timeval *tv) {

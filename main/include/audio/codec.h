@@ -1,5 +1,5 @@
-#ifndef __WAV_H_
-#define __WAV_H_
+#ifndef __CODEC_H_
+#define __CODEC_H_
 
 #include <cstdint>
 

@@ -6,9 +6,6 @@ using namespace agent;
 
 static const char *TAG = "oled";
 
-#define I2C_SDA_PIN 4
-#define I2C_SCL_PIN 5
-
 void Ssd1306OledI2c::configure_i2c() {
   i2c_master_bus_config_t bus_cfg = {
       .i2c_port = (i2c_port_t)0,

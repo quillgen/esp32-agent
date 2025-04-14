@@ -1,5 +1,6 @@
 #include "audio/speaker.h"
-#include "audio/wav.h"
+#include "audio/codec.h"
+#include "device.h"
 #include <driver/gpio.h>
 #include <driver/i2s.h>
 #include <math.h>
@@ -11,10 +12,6 @@
 using namespace agent;
 
 #define TAG "🤖 Audio"
-
-#define I2S_BCLK 15
-#define I2S_LRC 16
-#define I2S_DOUT 7
 
 #define MAX_HTTP_RECV_BUFFER 512
 
