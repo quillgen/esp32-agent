@@ -5,6 +5,7 @@ namespace agent {
 class Mic {
 public:
   void init();
+  void read_sound();
 
 private:
   void configure_i2c();

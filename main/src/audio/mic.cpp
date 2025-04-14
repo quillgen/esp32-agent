@@ -1,4 +1,5 @@
 #include "audio/mic.h"
+#include "device.h"
 
 #include <driver/i2s.h>
 #include <esp_log.h>
@@ -7,11 +8,9 @@
 
 using namespace agent;
 
-#define I2S_MIC_WS 4   // WS (LRCLK)
-#define I2S_MIC_BCLK 5 // BCLK
-#define I2S_MIC_DATA 6 // DATA
+#define TAG "mic"
 
-void Mic::init() {}
+void Mic::init() { configure_i2c(); }
 void Mic::configure_i2c() {
   i2s_config_t i2s_config = {
       .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX), // 主模式，输入
@@ -30,13 +29,23 @@ void Mic::configure_i2c() {
 
   // 引脚配置
   i2s_pin_config_t pin_config = {
-      .bck_io_num = I2S_MIC_BCLK,
-      .ws_io_num = I2S_MIC_WS,
-      .data_out_num = I2S_PIN_NO_CHANGE, // 未使用输出引脚
-      .data_in_num = I2S_MIC_DATA        // 数据输入引脚
+      .bck_io_num = MIC_I2S_BCLK,
+      .ws_io_num = MIC_I2S_WS,
+      .data_out_num = I2S_PIN_NO_CHANGE,
+      .data_in_num = MIC_I2S_DATA,
   };
 
   // 初始化 I2S
   ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_1, &i2s_config, 0, NULL));
   ESP_ERROR_CHECK(i2s_set_pin(I2S_NUM_1, &pin_config));
+}
+
+void Mic::read_sound() {
+  int32_t buffer[128];
+  size_t bytes_read;
+
+  i2s_read(I2S_NUM_1, buffer, sizeof(buffer), &bytes_read, portMAX_DELAY);
+
+  int32_t sample = buffer[0] >> 8; // INMP441 的有效数据在高 24 位
+  ESP_LOGI(TAG, "read data from mic!");
 }

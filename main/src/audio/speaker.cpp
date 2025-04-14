@@ -11,7 +11,7 @@
 
 using namespace agent;
 
-#define TAG "🤖 Audio"
+#define TAG "speaker"
 
 #define MAX_HTTP_RECV_BUFFER 512
 
@@ -29,9 +29,9 @@ void speaker::init_speaker() {
       .tx_desc_auto_clear = true,
   };
 
-  i2s_pin_config_t pin_config = {.bck_io_num = I2S_BCLK,
-                                 .ws_io_num = I2S_LRC,
-                                 .data_out_num = I2S_DOUT,
+  i2s_pin_config_t pin_config = {.bck_io_num = SPEAKER_I2S_BCLK,
+                                 .ws_io_num = SPEAKER_I2S_LRC,
+                                 .data_out_num = SPEAKER_I2S_DOUT,
                                  .data_in_num = I2S_PIN_NO_CHANGE};
 
   i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);

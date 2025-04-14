@@ -5,6 +5,7 @@
 #include <freertos/event_groups.h>
 #include <freertos/task.h>
 
+#include "audio/mic.h"
 #include "audio/speaker.h"
 #include "display/ssd1306_oled.h"
 #include "event.h"
@@ -30,6 +31,7 @@ public:
 
   void start();
   void reboot();
+  void main_loop();
 
 private:
   Application();
@@ -38,7 +40,6 @@ private:
 private:
   void sync_time();
   void watch_state_changed();
-  void main_loop();
   void set_state(AppState state);
 
 private:
@@ -46,6 +47,7 @@ private:
   Led *led_ = nullptr;
   network *network_ = nullptr;
   speaker *speaker_ = nullptr;
+  Mic *mic_ = nullptr;
   Ssd1306Oled *oled_ = nullptr;
   EventGroupHandle_t event_group_ = nullptr;
   Mutex mutex_;

@@ -21,6 +21,7 @@ Application::Application() {
   led_ = new RgbLed((gpio_num_t)CONFIG_BLINK_GPIO);
   network_ = new network(event_group_);
   speaker_ = new speaker();
+  mic_ = new Mic();
   oled_ = new Ssd1306OledI2c(event_group_);
 }
 
@@ -31,6 +32,8 @@ Application::~Application() {
     delete network_;
   if (speaker_ != nullptr)
     delete speaker_;
+  if (mic_ != nullptr)
+    delete mic_;
   if (oled_ != nullptr) {
     delete oled_;
   }
@@ -48,6 +51,9 @@ void Application::start() {
         self->watch_state_changed();
       },
       "LVGL", 4096, this, 0, NULL);
+
+  speaker_->init_speaker();
+  mic_->init();
   set_state(AppState::kNetworkConnecting);
   network_->init_wifi();
 
@@ -65,7 +71,7 @@ void Application::start() {
   } else {
     ESP_LOGE(TAG, "UNEXPECTED EVENT");
   }
-  speaker_->init_speaker();
+
   set_state(AppState::kIdle);
   speaker_->test();
 }
@@ -103,7 +109,11 @@ void Application::sync_time() {
   ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
 }
 
-void Application::main_loop() {}
+void Application::main_loop() {
+  while (1) {
+    mic_->read_sound();
+  }
+}
 
 void Application::set_state(AppState s) {
   if (state_ == s) {

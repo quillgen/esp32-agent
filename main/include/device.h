@@ -1,12 +1,16 @@
 #ifndef __DEVICE_H_
 #define __DEVICE_H_
 
-#define I2C_SDA_PIN 4
-#define I2C_SCL_PIN 5
+#define OLED_I2C_SDA_PIN 4
+#define OLED_I2C_SCL_PIN 5
 
-#define I2S_DOUT 6
-#define I2S_BCLK 7
-#define I2S_LRC 15
+#define SPEAKER_I2S_DOUT 6
+#define SPEAKER_I2S_BCLK 7
+#define SPEAKER_I2S_LRC 15
+
+#define MIC_I2S_WS 16   // WS (LRCLK)
+#define MIC_I2S_BCLK 17 // SCK(BCLK)
+#define MIC_I2S_DATA 18 // SD
 
 namespace agent {
 class Device {

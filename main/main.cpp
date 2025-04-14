@@ -30,6 +30,7 @@ extern "C" void app_main(void) {
   init_flash();
 
   Application::instance().start();
+  Application::instance().main_loop();
 
   while (1) {
     vTaskDelay(100);
