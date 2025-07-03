@@ -83,5 +83,7 @@
     "cinttypes": "cpp",
     "typeinfo": "cpp",
     "variant": "cpp"
-  }
+  },
+  "idf.espIdfPath": "/Users/riguz/esp/esp-idf",
+  "idf.toolsPath": "/Users/riguz/.espressif"
 }
