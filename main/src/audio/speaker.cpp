@@ -72,7 +72,7 @@ esp_err_t speaker::http_event_handler(esp_http_client_event_t *e) {
       int16_t *raw_data = (int16_t *)e->data;
       size_t sample_count = e->data_len / sizeof(int16_t);
       for (int i = 0; i < sample_count; i++) {
-        raw_data[i] = raw_data[i] * 0.05f; // audio gain
+        raw_data[i] = raw_data[i]; // audio gain
       }
       i2s_write(I2S_NUM_0, e->data, e->data_len, &bytes_written, portMAX_DELAY);
     }
@@ -108,7 +108,7 @@ void speaker::test() {
 void speaker::http_stream_task(void *pvParameters) {
   char *buffer = new char[MAX_HTTP_RECV_BUFFER + 1];
   esp_http_client_config_t config = {
-      .url = "http://192.168.1.3:8080/1.wav",
+      .url = "http://192.168.31.66:8080/1.wav",
       .timeout_ms = 10000,
       .disable_auto_redirect = false,
       .event_handler = speaker::http_event_handler,
