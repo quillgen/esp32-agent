@@ -27,12 +27,11 @@ void Ui::initialize() {
 }
 
 void Ui::on_lv_tick() {
+
   static uint32_t last_update = 0;
   static uint32_t progress = 0;
   if (lv_tick_elaps(last_update) > 1000) {
-    ++progress;
-    uint8_t p = progress % 4;
-
+    update_time();
     last_update = lv_tick_get();
   }
 }
@@ -43,7 +42,9 @@ void Ui::update_time() {
   time(&now);
   localtime_r(&now, &timeinfo);
   static char time_str[32];
-  strftime(time_str, sizeof(time_str), "%H:%M:%S", &timeinfo);
+  strftime(time_str, sizeof(time_str), "%H:%M", &timeinfo);
+
+  lv_label_set_text(this->time_label_, time_str);
 }
 
 void Ui::show_splash() { lv_scr_load(splash_screen_); }
@@ -54,7 +55,7 @@ void Ui::create_splash_screen() {
   welcome_ = lv_label_create(splash_screen_);
   progress_label_ = lv_label_create(splash_screen_);
   lv_label_set_text(progress_label_, "");
-  lv_label_set_text(welcome_, "Pico");
+  lv_label_set_text(welcome_, "Pico Pilot");
   lv_obj_center(welcome_);
   lv_obj_align(progress_label_, LV_ALIGN_TOP_LEFT, 0, 5);
 
@@ -71,20 +72,32 @@ void Ui::create_main_screen() {
   // Create status bar container
   status_bar_ = lv_obj_create(main_screen_);
   lv_obj_set_size(status_bar_, OLED_WIDTH, STATUS_BAR_HEIGHT);
-  lv_obj_align(status_bar_, LV_ALIGN_TOP_MID, 0, 0);
+  lv_obj_align(status_bar_, LV_ALIGN_TOP_LEFT, 0, 0);
+
+  lv_obj_set_style_pad_all(status_bar_, 0, 0);
+
+  // 设置flex布局：水平排列，左对齐，垂直居中
+  lv_obj_set_flex_flow(status_bar_, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(status_bar_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER,
+                        LV_FLEX_ALIGN_CENTER);
 
   // Status bar elements
   battery_label_ = lv_label_create(status_bar_);
-  lv_label_set_text(battery_label_, LV_SYMBOL_BATTERY_FULL);
-  lv_obj_align(battery_label_, LV_ALIGN_LEFT_MID, 0, 0);
+  lv_label_set_text(battery_label_, LV_SYMBOL_BATTERY_2);
 
   wifi_label_ = lv_label_create(status_bar_);
   lv_label_set_text(wifi_label_, LV_SYMBOL_WIFI);
-  lv_obj_align(wifi_label_, LV_ALIGN_LEFT_MID, 20, 0);
+
+  bluetooth_label_ = lv_label_create(status_bar_);
+  lv_label_set_text(bluetooth_label_, LV_SYMBOL_BLUETOOTH);
+
+  lv_obj_t *spacer = lv_obj_create(status_bar_);
+  lv_obj_set_flex_grow(spacer, 1); // 关键：占据剩余空间
+  lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, LV_PART_MAIN); // 透明
+  lv_obj_set_style_border_width(spacer, 0, LV_PART_MAIN);
 
   time_label_ = lv_label_create(status_bar_);
   lv_label_set_text(time_label_, "12:08");
-  lv_obj_align(time_label_, LV_ALIGN_LEFT_MID, 40, 0);
 
   // Add main content
   main_label_ = lv_label_create(main_screen_);
