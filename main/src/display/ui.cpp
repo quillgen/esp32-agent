@@ -13,15 +13,19 @@ using namespace agent;
 
 static const char *TAG = "ui";
 
-static lv_style_t kDefaultStyle;
-
 Ui::Ui(lv_display_t *display) : display_(display) {}
+
+static lv_style_t defaultStyle;
+static lv_style_t iconStyle;
 
 void Ui::initialize() {
   splash_screen_ = lv_obj_create(NULL);
   main_screen_ = lv_obj_create(NULL);
-  lv_style_init(&kDefaultStyle);
-  lv_style_set_text_font(&kDefaultStyle, &wqy_st_14);
+
+  lv_style_init(&defaultStyle);
+  lv_style_set_text_font(&defaultStyle, &wqy_st_14);
+  lv_style_init(&iconStyle);
+  lv_style_set_text_font(&iconStyle, &md_icons_14);
   create_splash_screen();
   create_main_screen();
 }
@@ -59,7 +63,7 @@ void Ui::create_splash_screen() {
   lv_obj_center(welcome_);
   lv_obj_align(progress_label_, LV_ALIGN_TOP_LEFT, 0, 5);
 
-  lv_obj_add_style(progress_label_, &kDefaultStyle, 0);
+  lv_obj_add_style(progress_label_, &defaultStyle, 0);
 }
 
 void Ui::set_network_connecting() {
@@ -83,13 +87,14 @@ void Ui::create_main_screen() {
 
   // Status bar elements
   battery_label_ = lv_label_create(status_bar_);
-  lv_label_set_text(battery_label_, LV_SYMBOL_BATTERY_2);
-
   wifi_label_ = lv_label_create(status_bar_);
-  lv_label_set_text(wifi_label_, LV_SYMBOL_WIFI);
-
   bluetooth_label_ = lv_label_create(status_bar_);
-  lv_label_set_text(bluetooth_label_, LV_SYMBOL_BLUETOOTH);
+  lv_label_set_text(wifi_label_, MD_ICON_SINGAL_ON);
+  lv_label_set_text(battery_label_, MD_ICON_BATTERY_50);
+  lv_label_set_text(bluetooth_label_, MD_ICON_BLUETOOTH_ON);
+  lv_obj_add_style(battery_label_, &iconStyle, 0);
+  lv_obj_add_style(wifi_label_, &iconStyle, 0);
+  lv_obj_add_style(bluetooth_label_, &iconStyle, 0);
 
   lv_obj_t *spacer = lv_obj_create(status_bar_);
   lv_obj_set_flex_grow(spacer, 1); // 关键：占据剩余空间
