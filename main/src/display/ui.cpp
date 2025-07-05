@@ -107,6 +107,7 @@ void Ui::create_main_screen() {
   time_label_ = lv_label_create(status_bar_);
   lv_label_set_text(time_label_, "12:08");
   lv_obj_add_style(time_label_, &monoStyle, 0);
+  lv_obj_set_style_pad_top(time_label_, 5, 0);
 
   // Add main content
   main_label_ = lv_label_create(main_screen_);
