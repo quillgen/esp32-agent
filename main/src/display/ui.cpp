@@ -21,7 +21,7 @@ void Ui::initialize() {
   splash_screen_ = lv_obj_create(NULL);
   main_screen_ = lv_obj_create(NULL);
   lv_style_init(&kDefaultStyle);
-  lv_style_set_text_font(&kDefaultStyle, &wqy_st_12);
+  lv_style_set_text_font(&kDefaultStyle, &wqy_st_14);
   create_splash_screen();
   create_main_screen();
 }
@@ -51,10 +51,11 @@ void Ui::show_splash() { lv_scr_load(splash_screen_); }
 void Ui::show_main() { lv_scr_load(main_screen_); }
 
 void Ui::create_splash_screen() {
-  logo_ = lv_image_create(splash_screen_);
+  welcome_ = lv_label_create(splash_screen_);
   progress_label_ = lv_label_create(splash_screen_);
-  lv_image_set_src(logo_, &duby_logo);
-  lv_obj_center(logo_);
+  lv_label_set_text(progress_label_, "");
+  lv_label_set_text(welcome_, "Pico");
+  lv_obj_center(welcome_);
   lv_obj_align(progress_label_, LV_ALIGN_TOP_LEFT, 0, 5);
 
   lv_obj_add_style(progress_label_, &kDefaultStyle, 0);
@@ -82,14 +83,14 @@ void Ui::create_main_screen() {
   lv_obj_align(wifi_label_, LV_ALIGN_LEFT_MID, 20, 0);
 
   time_label_ = lv_label_create(status_bar_);
-  lv_label_set_text(time_label_, "00:00:00");
-  lv_obj_align(time_label_, LV_ALIGN_RIGHT_MID, 0, 0);
+  lv_label_set_text(time_label_, "12:08");
+  lv_obj_align(time_label_, LV_ALIGN_LEFT_MID, 40, 0);
 
   // Add main content
   main_label_ = lv_label_create(main_screen_);
   lv_label_set_text(main_label_,
                     "人类的悲欢并不相通，\n我只是觉得他们吵闹。\n——鲁迅");
-  lv_obj_set_style_text_font(main_label_, &wqy_st_12, 0);
+  lv_obj_set_style_text_font(main_label_, &wqy_st_14, 0);
   lv_obj_set_style_text_align(main_label_, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_center(main_label_);
 }

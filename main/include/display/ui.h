@@ -25,7 +25,7 @@ private:
   lv_display_t *display_;
   lv_obj_t *splash_screen_;
   lv_obj_t *progress_label_;
-  lv_obj_t *logo_;
+  lv_obj_t *welcome_;
   lv_obj_t *main_screen_;
   lv_obj_t *status_bar_;
   lv_obj_t *battery_label_;

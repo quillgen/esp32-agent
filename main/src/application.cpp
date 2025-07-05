@@ -63,7 +63,7 @@ void Application::start() {
   if (bits & BIT_WIFI_CONNECTED) {
     ESP_LOGI(TAG, "connected to ap");
     set_state(AppState::kNstp);
-    sync_time();
+    // sync_time();
   } else if (bits & BIT_WIFI_FAILED) {
     ESP_LOGE(TAG, "Failed to connect to SSID:%s, password:%s",
              CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
@@ -73,7 +73,7 @@ void Application::start() {
   }
 
   set_state(AppState::kIdle);
-  speaker_->test();
+  // speaker_->test();
 }
 
 void time_sync_notification_cb(struct timeval *tv) {
