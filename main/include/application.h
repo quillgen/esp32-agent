@@ -7,9 +7,9 @@
 
 #include "audio/mic.h"
 #include "audio/speaker.h"
-#include "display/ssd1306_oled.h"
+#include "display/oled_display.h"
 #include "event.h"
-#include "led/led.h"
+#include "led/rgb_led.h"
 #include "mutex.h"
 #include "network.h"
 
@@ -27,30 +27,42 @@ public:
   Application &operator=(const Application &) = delete;
 
 public:
-  inline AppState get_state() { return this->state_; }
+  AppState get_state() const;
 
   void start();
   void reboot();
-  void main_loop();
 
 private:
   Application();
   ~Application();
 
 private:
+  static void main_task(void *arg);
+  static void display_task(void *arg);
+
+  void handle_booting_state();
+  void handle_network_connecting_state();
+  void handle_idle_state();
+  void handle_active_state();
+  void handle_error_state();
+
   void sync_time();
-  void watch_state_changed();
   void set_state(AppState state);
+  void update_display();
 
 private:
-  AppState state_ = AppState::kUnknown;
-  Led *led_ = nullptr;
-  network *network_ = nullptr;
-  speaker *speaker_ = nullptr;
-  Mic *mic_ = nullptr;
-  Ssd1306Oled *oled_ = nullptr;
-  EventGroupHandle_t event_group_ = nullptr;
-  Mutex mutex_;
+  AppState state_;
+  RgbLed *led_;
+  OledDisplay *oled_;
+  network *network_;
+  speaker *speaker_;
+  Mic *mic_;
+
+private:
+  EventGroupHandle_t event_group_;
+  SemaphoreHandle_t state_mutex_;
+  TaskHandle_t main_task_handle_;
+  TaskHandle_t display_task_handle_;
 };
 } // namespace agent
 

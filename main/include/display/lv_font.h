@@ -13,6 +13,10 @@
 
 #define MD_ICON_WARNING "\ue002"
 
+#define MD_ICON_RADA "\uf04e"
+#define MD_ICON_MIC "\ue029"
+#define MD_ICON_MIC_OFF "\ue02b"
+
 extern lv_font_t wqy_st_14;
 extern lv_font_t md_icons_14;
 extern lv_font_t inconsolata_14;

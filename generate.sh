@@ -19,7 +19,7 @@ lv_font_conv --bpp 1 \
     --size 16 \
     --no-compress \
     --font ./assets/MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf \
-    --range 0xf308,0xf063,0xe1ba,0xe1a7,0xe1a9,0xe002 \
+    --range 0xf308,0xf063,0xe1ba,0xe1a7,0xe1a9,0xe002,0xf04e,0xe02b,0xe029 \
     --format lvgl \
     --force-fast-kern-format \
     -o ./main/src/display/md_icons_14.c

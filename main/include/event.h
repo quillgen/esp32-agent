@@ -1,19 +1,23 @@
 #ifndef __EVENT_H_
 #define __EVENT_H_
 
-#define BIT_APP_STATE_CHANGED BIT0
-#define BIT_WIFI_CONNECTED BIT1
-#define BIT_WIFI_FAILED BIT2
+#define EVENT_STATE_CHANGED BIT0
+#define EVENT_NETWORK_CONNECTED BIT1
+#define EVENT_NETWORK_FAILED BIT2
+#define EVENT_USER_INPUT BIT3
+#define EVENT_SENSOR_DATA_READY BIT4
 
 namespace agent {
 enum AppState {
-  kUnknown,
-  kNetworkConnecting,
-  kNstp,
-  kIdle,
-  kNetworkNotConnected,
-  kError,
+  UNKNOWN,
+  BOOTING,
+  NETWORK_CONNECTING,
+  NETWORK_CONNECTED,
+  IDLE,
+  ACTIVE,
+  ERROR,
 };
+
 }
 
 #endif

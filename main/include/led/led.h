@@ -10,7 +10,6 @@ public:
   virtual ~Led() = default;
 
 public:
-  virtual void on_state_changed(AppState s) = 0;
   void init() override {}
 };
 } // namespace agent

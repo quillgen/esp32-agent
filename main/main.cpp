@@ -6,6 +6,7 @@
 
 #include "application.h"
 #include "flash.h"
+#include <esp_task_wdt.h>
 
 using namespace agent;
 
@@ -29,10 +30,12 @@ extern "C" void app_main(void) {
 
   init_flash();
 
-  Application::instance().start();
-  Application::instance().main_loop();
+  Application &app = Application::instance();
+  app.start();
 
   while (1) {
-    vTaskDelay(100);
+    lv_timer_handler();
+    vTaskDelay(pdMS_TO_TICKS(5));
+    esp_task_wdt_reset();
   }
 }
