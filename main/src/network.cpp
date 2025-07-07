@@ -14,7 +14,8 @@ using namespace agent;
 static const int MAX_RETRY_COUNT = 3;
 static const char *TAG = "🤖 NET";
 
-network::network(EventGroupHandle_t e) : event_group(e) {}
+network::network(EventGroupHandle_t e)
+    : state_(NetworkState::DISCONNECTED), event_group(e) {}
 
 void network::event_handler_static(void *arg, esp_event_base_t base,
                                    int32_t event_id, void *event_data) {

@@ -35,7 +35,6 @@ extern "C" void app_main(void) {
 
   while (1) {
     lv_timer_handler();
-    vTaskDelay(pdMS_TO_TICKS(5));
-    esp_task_wdt_reset();
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 }

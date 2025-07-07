@@ -136,7 +136,9 @@ void Application::main_task(void *arg) {
   esp_task_wdt_add(NULL);
 
   while (true) {
-    switch (app->get_state()) {
+    AppState s = app->get_state();
+    ESP_LOGI(TAG, "state->%d", s);
+    switch (s) {
     case AppState::BOOTING:
       app->handle_booting_state();
       break;
@@ -168,7 +170,7 @@ void Application::display_task(void *arg) {
                             pdTRUE,  // 清除事件位
                             pdFALSE, // 不等待所有位
                             portMAX_DELAY);
-
+    ESP_LOGI(TAG, "event state changed, refresh display");
     if (bits & EVENT_STATE_CHANGED) {
       app->update_display();
     }

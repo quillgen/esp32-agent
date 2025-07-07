@@ -46,6 +46,25 @@ void OledDisplay::configure_i2c() {
           },
   };
   ESP_ERROR_CHECK(i2c_new_master_bus(&bus_cfg, &i2c_bus_));
+
+  esp_lcd_panel_io_i2c_config_t io_config = {
+      .dev_addr = 0x3C,
+      .on_color_trans_done = nullptr,
+      .user_ctx = nullptr,
+      .control_phase_bytes = 1,
+      .dc_bit_offset = 6,
+      .lcd_cmd_bits = 8,
+      .lcd_param_bits = 8,
+      .flags =
+          {
+              .dc_low_on_data = 0,
+              .disable_control_phase = 0,
+          },
+      .scl_speed_hz = 200 * 1000,
+  };
+
+  ESP_ERROR_CHECK(
+      esp_lcd_new_panel_io_i2c_v2(i2c_bus_, &io_config, &io_handle_));
 }
 
 void OledDisplay::flip_screen() {

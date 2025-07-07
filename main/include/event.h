@@ -18,6 +18,13 @@ enum AppState {
   ERROR,
 };
 
-}
+enum NetworkState {
+  DISCONNECTED,
+  CONNECTING,
+  CONNECTED,
+  ERROR,
+};
+
+} // namespace agent
 
 #endif

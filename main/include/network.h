@@ -1,6 +1,7 @@
 #ifndef __NETWORK_H_
 #define __NETWORK_H_
 
+#include "event.h"
 #include <esp_event.h>
 
 namespace agent {
@@ -18,6 +19,7 @@ private:
                                    int32_t event_id, void *event_data);
 
 private:
+  NetworkState state_;
   int retry_count = 0;
   EventGroupHandle_t event_group;
 };
