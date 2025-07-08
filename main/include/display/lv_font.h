@@ -13,7 +13,7 @@
 
 #define MD_ICON_WARNING "\ue002"
 
-#define MD_ICON_RADA "\uf04e"
+#define MD_ICON_RADAR "\uf04e"
 #define MD_ICON_MIC "\ue029"
 #define MD_ICON_MIC_OFF "\ue02b"
 

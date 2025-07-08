@@ -30,7 +30,8 @@ OledDisplay::OledDisplay()
       display_(nullptr), splash_screen_(nullptr), progress_label_(nullptr),
       welcome_(nullptr), main_screen_(nullptr), status_bar_(nullptr),
       battery_label_(nullptr), wifi_label_(nullptr), bluetooth_label_(nullptr),
-      time_label_(nullptr), main_label_(nullptr) {
+      mic_label_(nullptr), radar_label_(nullptr), time_label_(nullptr),
+      main_label_(nullptr) {
   buffer_ = new uint8_t[buffer_size]{};
 }
 
@@ -236,12 +237,18 @@ void OledDisplay::create_main_screen() {
   battery_label_ = lv_label_create(status_bar_);
   wifi_label_ = lv_label_create(status_bar_);
   bluetooth_label_ = lv_label_create(status_bar_);
+  mic_label_ = lv_label_create(status_bar_);
+  radar_label_ = lv_label_create(status_bar_);
   lv_label_set_text(wifi_label_, MD_ICON_SINGAL_ON);
   lv_label_set_text(battery_label_, MD_ICON_BATTERY_75);
   lv_label_set_text(bluetooth_label_, MD_ICON_BLUETOOTH_ON);
+  lv_label_set_text(mic_label_, MD_ICON_MIC);
+  lv_label_set_text(radar_label_, MD_ICON_RADAR);
   lv_obj_add_style(battery_label_, &iconStyle, 0);
   lv_obj_add_style(wifi_label_, &iconStyle, 0);
   lv_obj_add_style(bluetooth_label_, &iconStyle, 0);
+  lv_obj_add_style(mic_label_, &iconStyle, 0);
+  lv_obj_add_style(radar_label_, &iconStyle, 0);
 
   lv_obj_t *spacer = lv_obj_create(status_bar_);
   lv_obj_set_flex_grow(spacer, 1); // 关键：占据剩余空间

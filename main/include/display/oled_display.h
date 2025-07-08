@@ -56,6 +56,8 @@ private:
   lv_obj_t *battery_label_;
   lv_obj_t *wifi_label_;
   lv_obj_t *bluetooth_label_;
+  lv_obj_t *mic_label_;
+  lv_obj_t *radar_label_;
   lv_obj_t *time_label_;
   lv_obj_t *main_label_;
 };
