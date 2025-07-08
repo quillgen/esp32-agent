@@ -4,6 +4,8 @@
 #include <esp_err.h>
 #include <lvgl.h>
 
+#include "display/lv_font.h"
+
 using namespace agent;
 
 static const char *TAG = "oled";
@@ -12,14 +14,23 @@ static const char *TAG = "oled";
 #define OLED_HEIGHT 64
 #define PALETTE_SIZE 8
 
+#define STATUS_BAR_HEIGHT (OLED_HEIGHT / 4)
+
 #define LVGL_TICK_PERIOD_MS 5
 
 size_t buffer_size = (OLED_WIDTH * OLED_HEIGHT) / 8 + PALETTE_SIZE;
 static uint8_t oled_buffer[OLED_WIDTH * OLED_HEIGHT / 8];
 
+static lv_style_t defaultStyle;
+static lv_style_t iconStyle;
+static lv_style_t monoStyle;
+
 OledDisplay::OledDisplay()
     : i2c_bus_(nullptr), panel_handle_(nullptr), io_handle_(nullptr),
-      display_(nullptr) {
+      display_(nullptr), splash_screen_(nullptr), progress_label_(nullptr),
+      welcome_(nullptr), main_screen_(nullptr), status_bar_(nullptr),
+      battery_label_(nullptr), wifi_label_(nullptr), bluetooth_label_(nullptr),
+      time_label_(nullptr), main_label_(nullptr) {
   buffer_ = new uint8_t[buffer_size]{};
 }
 
@@ -172,11 +183,80 @@ void OledDisplay::init() {
       .name = "lvgl_tick",
       .skip_unhandled_events = false,
   };
+
+  splash_screen_ = lv_obj_create(NULL);
+  main_screen_ = lv_obj_create(NULL);
+
+  lv_style_init(&defaultStyle);
+  lv_style_set_text_font(&defaultStyle, &wqy_st_14);
+  lv_style_init(&iconStyle);
+  lv_style_set_text_font(&iconStyle, &md_icons_14);
+  lv_style_init(&monoStyle);
+  lv_style_set_text_font(&monoStyle, &inconsolata_14);
+  create_splash_screen();
+  create_main_screen();
 }
 
 void OledDisplay::refresh() {}
-void OledDisplay::show_splash_screen() {}
-void OledDisplay::show_network_status(bool connected) {}
-void OledDisplay::show_idle_screen() {}
-void OledDisplay::show_active_screen() {}
-void OledDisplay::show_error_screen(const char *error) {}
+void OledDisplay::show_splash_screen() { lv_scr_load(splash_screen_); }
+void OledDisplay::show_network_status(bool connected) {
+  lv_scr_load(main_screen_);
+}
+void OledDisplay::show_idle_screen() { lv_scr_load(main_screen_); }
+void OledDisplay::show_active_screen() { lv_scr_load(main_screen_); }
+void OledDisplay::show_error_screen(const char *error) {
+  lv_scr_load(main_screen_);
+}
+
+void OledDisplay::create_splash_screen() {
+  welcome_ = lv_label_create(splash_screen_);
+  progress_label_ = lv_label_create(splash_screen_);
+  lv_label_set_text(progress_label_, "");
+  lv_label_set_text(welcome_, "Pico Pilot");
+  lv_obj_center(welcome_);
+  lv_obj_align(progress_label_, LV_ALIGN_TOP_LEFT, 0, 5);
+
+  lv_obj_add_style(progress_label_, &defaultStyle, 0);
+}
+
+void OledDisplay::create_main_screen() {
+  // Create status bar container
+  status_bar_ = lv_obj_create(main_screen_);
+  lv_obj_set_size(status_bar_, OLED_WIDTH, STATUS_BAR_HEIGHT);
+  lv_obj_align(status_bar_, LV_ALIGN_TOP_LEFT, 0, 0);
+
+  lv_obj_set_style_pad_all(status_bar_, 0, 0);
+
+  // 设置flex布局：水平排列，左对齐，垂直居中
+  lv_obj_set_flex_flow(status_bar_, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(status_bar_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER,
+                        LV_FLEX_ALIGN_CENTER);
+
+  // Status bar elements
+  battery_label_ = lv_label_create(status_bar_);
+  wifi_label_ = lv_label_create(status_bar_);
+  bluetooth_label_ = lv_label_create(status_bar_);
+  lv_label_set_text(wifi_label_, MD_ICON_SINGAL_ON);
+  lv_label_set_text(battery_label_, MD_ICON_BATTERY_75);
+  lv_label_set_text(bluetooth_label_, MD_ICON_BLUETOOTH_ON);
+  lv_obj_add_style(battery_label_, &iconStyle, 0);
+  lv_obj_add_style(wifi_label_, &iconStyle, 0);
+  lv_obj_add_style(bluetooth_label_, &iconStyle, 0);
+
+  lv_obj_t *spacer = lv_obj_create(status_bar_);
+  lv_obj_set_flex_grow(spacer, 1); // 关键：占据剩余空间
+  lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, LV_PART_MAIN); // 透明
+  lv_obj_set_style_border_width(spacer, 0, LV_PART_MAIN);
+
+  time_label_ = lv_label_create(status_bar_);
+  lv_label_set_text(time_label_, "12:08");
+  lv_obj_add_style(time_label_, &monoStyle, 0);
+
+  // Add main content
+  main_label_ = lv_label_create(main_screen_);
+  lv_label_set_text(main_label_,
+                    "人类的悲欢并不相通，\n我只是觉得他们吵闹。\n——鲁迅");
+  lv_obj_set_style_text_font(main_label_, &wqy_st_14, 0);
+  lv_obj_set_style_text_align(main_label_, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_center(main_label_);
+}

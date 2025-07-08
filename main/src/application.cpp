@@ -148,6 +148,8 @@ void Application::main_task(void *arg) {
 
 void Application::display_task(void *arg) {
   Application *app = static_cast<Application *>(arg);
+  app->oled_->show_splash_screen();
+
   while (1) {
     uint32_t time_till_next = lv_timer_handler();
     if (time_till_next == LV_NO_TIMER_READY) {

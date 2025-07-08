@@ -36,18 +36,28 @@ private:
   void configure_i2c();
   void ssd1306_init();
   void flip_screen();
+  void create_splash_screen();
+  void create_main_screen();
+  void update_time();
 
 private:
   i2c_master_bus_handle_t i2c_bus_;
   esp_lcd_panel_handle_t panel_handle_;
   esp_lcd_panel_io_handle_t io_handle_;
 
-  lv_display_t *display_;
   uint8_t *buffer_ = nullptr;
 
+  lv_display_t *display_;
+  lv_obj_t *splash_screen_;
+  lv_obj_t *progress_label_;
+  lv_obj_t *welcome_;
   lv_obj_t *main_screen_;
   lv_obj_t *status_bar_;
-  lv_obj_t *content_area_;
+  lv_obj_t *battery_label_;
+  lv_obj_t *wifi_label_;
+  lv_obj_t *bluetooth_label_;
+  lv_obj_t *time_label_;
+  lv_obj_t *main_label_;
 };
 } // namespace agent
 #endif
