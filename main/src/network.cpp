@@ -15,7 +15,16 @@ static const int MAX_RETRY_COUNT = 3;
 static const char *TAG = "🤖 NET";
 
 network::network(EventGroupHandle_t e)
-    : state_(NetworkState::DISCONNECTED), event_group(e) {}
+    : state_(NetworkState::DISCONNECTED), retry_count_(0), event_group_(e),
+      mutex_(xSemaphoreCreateMutex()) {}
+
+network::~network() {
+  esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID,
+                               &event_handler_static);
+  esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP,
+                               &event_handler_static);
+  vEventGroupDelete(event_group_);
+}
 
 void network::event_handler_static(void *arg, esp_event_base_t base,
                                    int32_t event_id, void *event_data) {
@@ -32,27 +41,31 @@ void network::event_handler(esp_event_base_t event_base, int32_t event_id,
                             void *event_data) {
   if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
     ESP_LOGI(TAG, "connecting to wifi...");
+    set_state(NetworkState::CONNECTING);
     esp_wifi_connect();
+  } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_STOP) {
+    set_state(NetworkState::DISCONNECTED);
+    ESP_LOGE(TAG, "wifi disconnected");
   } else if (event_base == WIFI_EVENT &&
              event_id == WIFI_EVENT_STA_DISCONNECTED) {
-    if (this->retry_count < MAX_RETRY_COUNT) {
-      ESP_LOGW(TAG, "retry (%d/%d) connecting..", (this->retry_count + 1),
+    if (this->retry_count_ < MAX_RETRY_COUNT) {
+      ESP_LOGW(TAG, "retry (%d/%d) connecting..", (this->retry_count_ + 1),
                MAX_RETRY_COUNT);
       esp_wifi_connect();
-      this->retry_count++;
+      this->retry_count_++;
     } else {
-      xEventGroupSetBits(this->event_group, EVENT_NETWORK_FAILED);
+      set_state(NetworkState::NETWORK_ERROR);
     }
-    ESP_LOGE(TAG, "wifi disconnected");
+    ESP_LOGE(TAG, "wifi connect failed");
   } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-    this->retry_count = 0;
-    xEventGroupSetBits(this->event_group, EVENT_NETWORK_CONNECTED);
+    this->retry_count_ = 0;
+    set_state(NetworkState::CONNECTED);
   }
 }
 
-void network::init_wifi() {
+void network::init() {
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
   esp_netif_create_default_wifi_sta();
@@ -84,4 +97,15 @@ void network::init_wifi() {
   ESP_ERROR_CHECK(esp_wifi_start());
 
   ESP_LOGI(TAG, "wifi initialized");
+}
+
+void network::set_state(NetworkState newState) {
+  if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) == pdTRUE) {
+    if (state_ != newState) {
+      state_ = newState;
+      ESP_LOGI(TAG, "wifi state changed ->%d", state_);
+      xEventGroupSetBits(event_group_, Events::NETWORK_STATE_CHANGED);
+    }
+    xSemaphoreGive(mutex_);
+  }
 }

@@ -51,16 +51,13 @@ void Application::start() {
 
   led_->init();
   oled_->init();
+  network_->init();
   speaker_->init_speaker();
   mic_->init();
-  network_->init_wifi();
 
-  xTaskCreatePinnedToCore(main_task, "MainTask", 8192, this,
-                          2, // 优先级 (高于其他任务)
+  xTaskCreatePinnedToCore(main_task, "Main_Task", 8192, this, 2,
                           &main_task_handle_, APP_CPU_NUM);
-  xTaskCreate(display_task, "Display", 6144, this,
-              1, // 中等优先级
-              &display_task_handle_);
+  xTaskCreate(display_task, "UI_Task", 4096, this, 1, &display_task_handle_);
 
   // EventBits_t bits =
   //     xEventGroupWaitBits(event_group_, BIT_WIFI_CONNECTED | BIT_WIFI_FAILED,
@@ -115,10 +112,12 @@ void Application::sync_time() {
 
 void Application::set_state(AppState s) {
   if (xSemaphoreTake(state_mutex_, portMAX_DELAY) == pdTRUE) {
-    state_ = s;
-    xSemaphoreGive(state_mutex_);
+    if (state_ != s) {
+      state_ = s;
+      xEventGroupSetBits(event_group_, Events::APP_STATE_CHANGED);
+    }
 
-    xEventGroupSetBits(event_group_, EVENT_STATE_CHANGED);
+    xSemaphoreGive(state_mutex_);
   }
 }
 
@@ -133,49 +132,36 @@ AppState Application::get_state() const {
 
 void Application::main_task(void *arg) {
   Application *app = static_cast<Application *>(arg);
-  esp_task_wdt_add(NULL);
-
   while (true) {
+    EventBits_t bits =
+        xEventGroupWaitBits(app->event_group_, Events::APP_STATE_CHANGED,
+                            pdTRUE,  // 清除事件位
+                            pdFALSE, // 不等待所有位
+                            portMAX_DELAY);
     AppState s = app->get_state();
-    ESP_LOGI(TAG, "state->%d", s);
-    switch (s) {
-    case AppState::BOOTING:
-      app->handle_booting_state();
-      break;
-    case AppState::NETWORK_CONNECTING:
-      app->handle_network_connecting_state();
-      break;
-    case AppState::IDLE:
-      app->handle_idle_state();
-      break;
-    case AppState::ACTIVE:
-      app->handle_active_state();
-      break;
-    case AppState::ERROR:
-      app->handle_error_state();
-      break;
-    default:
-      break;
+    if (bits & Events::APP_STATE_CHANGED) {
+      ESP_LOGI(TAG, "app state changed->%d", s);
     }
-    esp_task_wdt_reset();
-    vTaskDelay(pdMS_TO_TICKS(50));
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
 
 void Application::display_task(void *arg) {
   Application *app = static_cast<Application *>(arg);
-  while (true) {
-    EventBits_t bits =
-        xEventGroupWaitBits(app->event_group_, EVENT_STATE_CHANGED,
-                            pdTRUE,  // 清除事件位
-                            pdFALSE, // 不等待所有位
-                            portMAX_DELAY);
-    ESP_LOGI(TAG, "event state changed, refresh display");
-    if (bits & EVENT_STATE_CHANGED) {
-      app->update_display();
+  while (1) {
+    uint32_t time_till_next = lv_timer_handler();
+    if (time_till_next == LV_NO_TIMER_READY) {
+      time_till_next = LV_DEF_REFR_PERIOD;
     }
-    app->oled_->refresh();
-    vTaskDelay(pdMS_TO_TICKS(100));
+
+    // 将毫秒转换为FreeRTOS
+    // ticks（注意：pdMS_TO_TICKS可能不支持0，所以需要处理）
+    if (time_till_next > 0) {
+      vTaskDelay(pdMS_TO_TICKS(time_till_next));
+    } else {
+      // 如果time_till_next为0，表示需要立即再次调用，但我们不能无延迟地循环，所以让出CPU
+      taskYIELD();
+    }
   }
 }
 
@@ -197,16 +183,16 @@ void Application::handle_network_connecting_state() {
 
 void Application::handle_idle_state() {
   // 等待用户输入或传感器事件
-  EventBits_t bits = xEventGroupWaitBits(
-      event_group_, EVENT_USER_INPUT | EVENT_SENSOR_DATA_READY,
-      pdTRUE,             // 清除事件位
-      pdFALSE,            // 不等待所有位
-      pdMS_TO_TICKS(1000) // 超时1秒
-  );
+  // EventBits_t bits = xEventGroupWaitBits(
+  //     event_group_, EVENT_USER_INPUT | EVENT_SENSOR_DATA_READY,
+  //     pdTRUE,             // 清除事件位
+  //     pdFALSE,            // 不等待所有位
+  //     pdMS_TO_TICKS(1000) // 超时1秒
+  // );
 
-  if (bits) {
-    set_state(AppState::ACTIVE);
-  }
+  // if (bits) {
+  //   set_state(AppState::ACTIVE);
+  // }
 }
 
 void Application::handle_active_state() {}
@@ -224,10 +210,11 @@ void Application::update_display() {
   case AppState::ACTIVE:
     // oled_->show_active_screen(sensor_->latest_data());
     break;
-  case AppState::ERROR:
+  case AppState::APP_ERROR:
     // oled_->show_error_screen(network_->last_error());
     break;
   default:
+    led_->show(READY_COLOR.r, READY_COLOR.g, READY_COLOR.b);
     break;
   }
 }

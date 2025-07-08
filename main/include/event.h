@@ -1,11 +1,8 @@
 #ifndef __EVENT_H_
 #define __EVENT_H_
 
-#define EVENT_STATE_CHANGED BIT0
-#define EVENT_NETWORK_CONNECTED BIT1
-#define EVENT_NETWORK_FAILED BIT2
-#define EVENT_USER_INPUT BIT3
-#define EVENT_SENSOR_DATA_READY BIT4
+#include <freertos/FreeRTOS.h>
+#include <freertos/event_groups.h>
 
 namespace agent {
 enum AppState {
@@ -15,14 +12,15 @@ enum AppState {
   NETWORK_CONNECTED,
   IDLE,
   ACTIVE,
-  ERROR,
+  APP_ERROR,
 };
 
-enum NetworkState {
-  DISCONNECTED,
-  CONNECTING,
-  CONNECTED,
-  ERROR,
+enum NetworkState { DISCONNECTED, CONNECTING, CONNECTED, NETWORK_ERROR };
+
+class Events {
+public:
+  static constexpr EventBits_t APP_STATE_CHANGED = BIT0;
+  static constexpr EventBits_t NETWORK_STATE_CHANGED = BIT1;
 };
 
 } // namespace agent
