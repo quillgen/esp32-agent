@@ -1,5 +1,6 @@
 #include "display/oled_display.h"
 
+#include <ctime>
 #include <driver/i2c_master.h>
 #include <esp_err.h>
 #include <lvgl.h>
@@ -255,10 +256,6 @@ void OledDisplay::create_main_screen() {
   lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, LV_PART_MAIN); // 透明
   lv_obj_set_style_border_width(spacer, 0, LV_PART_MAIN);
 
-  time_label_ = lv_label_create(status_bar_);
-  lv_label_set_text(time_label_, "12:08");
-  lv_obj_add_style(time_label_, &monoStyle, 0);
-
   // Add main content
   main_label_ = lv_label_create(main_screen_);
   lv_label_set_text(main_label_,
@@ -266,4 +263,27 @@ void OledDisplay::create_main_screen() {
   lv_obj_set_style_text_font(main_label_, &wqy_st_14, 0);
   lv_obj_set_style_text_align(main_label_, LV_TEXT_ALIGN_CENTER, 0);
   lv_obj_center(main_label_);
+
+  info_bar_ = lv_obj_create(main_screen_);
+  lv_obj_set_size(info_bar_, OLED_WIDTH, STATUS_BAR_HEIGHT);
+  lv_obj_align(info_bar_, LV_ALIGN_TOP_LEFT, 0, 48);
+  lv_obj_set_style_pad_all(info_bar_, 0, 0);
+  lv_obj_set_flex_flow(info_bar_, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(info_bar_, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER,
+                        LV_FLEX_ALIGN_CENTER);
+
+  time_label_ = lv_label_create(info_bar_);
+  lv_label_set_text(time_label_, "12:08");
+  lv_obj_add_style(time_label_, &monoStyle, 0);
+}
+
+void OledDisplay::update_time() {
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+  localtime_r(&now, &timeinfo);
+  static char time_str[32];
+  strftime(time_str, sizeof(time_str), "%H:%M", &timeinfo);
+
+  lv_label_set_text(this->time_label_, time_str);
 }

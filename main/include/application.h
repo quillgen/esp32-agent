@@ -38,7 +38,7 @@ private:
 
 private:
   static void main_task(void *arg);
-  static void display_task(void *arg);
+  static void ui_task(void *arg);
 
   void handle_booting_state();
   void handle_network_connecting_state();

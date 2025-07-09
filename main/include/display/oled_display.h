@@ -60,6 +60,7 @@ private:
   lv_obj_t *radar_label_;
   lv_obj_t *time_label_;
   lv_obj_t *main_label_;
+  lv_obj_t *info_bar_;
 };
 } // namespace agent
 #endif

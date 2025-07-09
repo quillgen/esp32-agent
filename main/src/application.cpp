@@ -57,7 +57,7 @@ void Application::start() {
 
   xTaskCreatePinnedToCore(main_task, "Main_Task", 8192, this, 2,
                           &main_task_handle_, APP_CPU_NUM);
-  xTaskCreate(display_task, "UI_Task", 4096, this, 1, &display_task_handle_);
+  xTaskCreate(ui_task, "UI_Task", 4096, this, 1, &display_task_handle_);
 
   // EventBits_t bits =
   //     xEventGroupWaitBits(event_group_, BIT_WIFI_CONNECTED | BIT_WIFI_FAILED,
@@ -146,7 +146,7 @@ void Application::main_task(void *arg) {
   }
 }
 
-void Application::display_task(void *arg) {
+void Application::ui_task(void *arg) {
   Application *app = static_cast<Application *>(arg);
   app->oled_->show_active_screen();
 
