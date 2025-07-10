@@ -34,15 +34,15 @@ OledDisplay::OledDisplay()
       battery_label_(nullptr), wifi_label_(nullptr), bluetooth_label_(nullptr),
       mic_label_(nullptr), radar_label_(nullptr), time_label_(nullptr),
       main_label_(nullptr) {
-  buffer_ = new uint8_t[buffer_size]{};
+  lvgl_draw_buffer_ = new uint8_t[buffer_size];
 }
 
 OledDisplay::~OledDisplay() {
   if (display_ != nullptr) {
     lv_display_delete(display_);
   }
-
-  delete[] buffer_;
+  if (lvgl_draw_buffer_)
+    delete[] lvgl_draw_buffer_;
 }
 
 void OledDisplay::configure_i2c() {
@@ -124,6 +124,7 @@ static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t io_panel,
 
 static void lvgl_flush_callback(lv_display_t *disp, const lv_area_t *area,
                                 uint8_t *px_map) {
+  // see:https://github.com/espressif/esp-idf/blob/master/examples/peripherals/lcd/i2c_oled/main/i2c_oled_example_main.c
   esp_lcd_panel_handle_t panel_handle =
       static_cast<esp_lcd_panel_handle_t>(lv_display_get_user_data(disp));
   px_map += PALETTE_SIZE;
@@ -168,7 +169,7 @@ void OledDisplay::init() {
   display_ = lv_display_create(OLED_WIDTH, OLED_HEIGHT);
   lv_display_set_user_data(display_, panel_handle_);
   lv_display_set_color_format(display_, LV_COLOR_FORMAT_I1);
-  lv_display_set_buffers(display_, buffer_, NULL, buffer_size,
+  lv_display_set_buffers(display_, lvgl_draw_buffer_, NULL, buffer_size,
                          LV_DISPLAY_RENDER_MODE_PARTIAL);
   lv_display_set_flush_cb(display_, lvgl_flush_callback);
 
@@ -200,7 +201,7 @@ void OledDisplay::init() {
   // test_display();
   // vTaskDelay(pdMS_TO_TICKS(2000));
 
-  show_splash_screen();
+  show_active_screen();
 }
 
 void OledDisplay::refresh() {}

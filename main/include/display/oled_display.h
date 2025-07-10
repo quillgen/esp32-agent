@@ -46,7 +46,7 @@ private:
   esp_lcd_panel_handle_t panel_handle_;
   esp_lcd_panel_io_handle_t io_handle_;
 
-  uint8_t *buffer_ = nullptr;
+  uint8_t *lvgl_draw_buffer_;
 
   lv_display_t *display_;
   lv_obj_t *splash_screen_;
