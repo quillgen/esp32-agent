@@ -48,6 +48,7 @@ private:
 
   void sync_time();
   void set_state(AppState state);
+  NetworkState get_network_state() const { return network_->get_state(); }
   void update_display();
 
 private:

@@ -33,7 +33,7 @@ extern "C" void app_main(void) {
   ++boot_count;
   ESP_LOGI(TAG, "ESP32 agent running! boot_count: %d", boot_count);
 
-    time_t now;
+  time_t now;
   struct tm timeinfo;
   time(&now);
   localtime_r(&now, &timeinfo);
@@ -47,8 +47,6 @@ extern "C" void app_main(void) {
   Application &app = Application::instance();
   app.start();
 
-  while (1) {
-    lv_timer_handler();
-    vTaskDelay(pdMS_TO_TICKS(10));
-  }
+  // 注意：app_main函数不能返回，所以我们让这个任务挂起自己
+  vTaskSuspend(NULL);
 }

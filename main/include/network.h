@@ -12,14 +12,13 @@ public:
 
 public:
   void init();
+  NetworkState get_state() const { return state_; }
 
 private:
   void event_handler(esp_event_base_t event_base, int32_t event_id,
                      void *event_data);
   static void event_handler_static(void *arg, esp_event_base_t base,
                                    int32_t event_id, void *event_data);
-  NetworkState get_state() const { return state_; }
-
   void set_state(NetworkState newState);
 
 private:

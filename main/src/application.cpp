@@ -18,7 +18,7 @@ const RgbColor WARNING_COLOR = RgbColor(0, 0, 10);
 #define NTP_SERVER_1 "ntp.aliyun.com"
 #define NTP_SERVER_2 "ntp.aliyun.com"
 
-#define TAG "app"
+#define TAG "application"
 
 Application::Application()
     : state_(AppState::BOOTING), led_(nullptr), oled_(nullptr),
@@ -57,22 +57,7 @@ void Application::start() {
 
   xTaskCreatePinnedToCore(main_task, "Main_Task", 8192, this, 2,
                           &main_task_handle_, APP_CPU_NUM);
-  xTaskCreate(ui_task, "UI_Task", 4096, this, 1, &display_task_handle_);
-
-  // EventBits_t bits =
-  //     xEventGroupWaitBits(event_group_, BIT_WIFI_CONNECTED | BIT_WIFI_FAILED,
-  //                         pdFALSE, pdFALSE, portMAX_DELAY);
-  // if (bits & BIT_WIFI_CONNECTED) {
-  //   ESP_LOGI(TAG, "connected to ap");
-  //   set_state(AppState::kNstp);
-  //   // sync_time();
-  // } else if (bits & BIT_WIFI_FAILED) {
-  //   ESP_LOGE(TAG, "Failed to connect to SSID:%s, password:%s",
-  //            CONFIG_ESP_WIFI_SSID, CONFIG_ESP_WIFI_PASSWORD);
-  //   set_state(AppState::kNetworkNotConnected);
-  // } else {
-  //   ESP_LOGE(TAG, "UNEXPECTED EVENT");
-  // }
+  xTaskCreate(ui_task, "UI_Task", 8192, this, 1, &display_task_handle_);
 
   // set_state(AppState::kIdle);
   // speaker_->test();
@@ -132,24 +117,25 @@ AppState Application::get_state() const {
 
 void Application::main_task(void *arg) {
   Application *app = static_cast<Application *>(arg);
+  const TickType_t xDelay = pdMS_TO_TICKS(500); // 500ms超时
   while (true) {
     EventBits_t bits =
         xEventGroupWaitBits(app->event_group_, Events::APP_STATE_CHANGED,
                             pdTRUE,  // 清除事件位
                             pdFALSE, // 不等待所有位
-                            portMAX_DELAY);
-    AppState s = app->get_state();
+                            xDelay);
     if (bits & Events::APP_STATE_CHANGED) {
+      AppState s = app->get_state();
+      ESP_LOGI(TAG, "app state changed->%d", s);
+    } else if (bits & Events::NETWORK_STATE_CHANGED) {
+      NetworkState s = app->get_network_state();
       ESP_LOGI(TAG, "app state changed->%d", s);
     }
-    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
 
 void Application::ui_task(void *arg) {
   Application *app = static_cast<Application *>(arg);
-  app->oled_->show_active_screen();
-
   while (1) {
     uint32_t time_till_next = lv_timer_handler();
     if (time_till_next == LV_NO_TIMER_READY) {

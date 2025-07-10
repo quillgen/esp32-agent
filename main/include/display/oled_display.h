@@ -39,6 +39,7 @@ private:
   void create_splash_screen();
   void create_main_screen();
   void update_time();
+  void test_display();
 
 private:
   i2c_master_bus_handle_t i2c_bus_;

@@ -6,6 +6,7 @@
 #include <lvgl.h>
 
 #include "display/lv_font.h"
+#include <cstring>
 
 using namespace agent;
 
@@ -133,8 +134,6 @@ static void lvgl_flush_callback(lv_display_t *disp, const lv_area_t *area,
   int y1 = area->y1;
   int y2 = area->y2;
 
-  // ESP_LOGI(TAG, "draw at: (%d, %d) (%d, %d)", x1, y1, x2, y2);
-
   for (int y = y1; y <= y2; y++) {
     for (int x = x1; x <= x2; x++) {
       /* The order of bits is MSB first
@@ -197,6 +196,11 @@ void OledDisplay::init() {
   lv_style_set_text_font(&monoStyle, &inconsolata_14);
   create_splash_screen();
   create_main_screen();
+
+  // test_display();
+  // vTaskDelay(pdMS_TO_TICKS(2000));
+
+  show_splash_screen();
 }
 
 void OledDisplay::refresh() {}
@@ -286,4 +290,20 @@ void OledDisplay::update_time() {
   strftime(time_str, sizeof(time_str), "%H:%M", &timeinfo);
 
   lv_label_set_text(this->time_label_, time_str);
+}
+
+void OledDisplay::test_display() {
+  // for (int page = 0; page < PAGES; page++) {
+  //   for (int x = 0; x < OLED_WIDTH; x++) {
+  //     // 每4像素一个条纹
+  //     if (x % 8 < 4) {
+  //       oled_buffer[page * OLED_WIDTH + x] = 0xFF; // 全亮
+  //     } else {
+  //       oled_buffer[page * OLED_WIDTH + x] = 0x00; // 全暗
+  //     }
+  //   }
+  // }
+
+  // esp_lcd_panel_draw_bitmap(panel_handle_, 0, 0, OLED_WIDTH, OLED_HEIGHT,
+  //                           oled_buffer);
 }
