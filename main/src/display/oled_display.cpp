@@ -14,14 +14,15 @@ static const char *TAG = "oled";
 
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
-#define PALETTE_SIZE 8
 
 #define STATUS_BAR_HEIGHT (OLED_HEIGHT / 4)
 
 #define LVGL_TICK_PERIOD_MS 5
 
-size_t buffer_size = (OLED_WIDTH * OLED_HEIGHT) / 8 + PALETTE_SIZE;
 static uint8_t oled_buffer[OLED_WIDTH * OLED_HEIGHT / 8];
+// LVGL 9: must include palette size for 1-bit buffer
+#define PALETTE_SIZE 8
+size_t buffer_size = (OLED_WIDTH * OLED_HEIGHT) / 8 + PALETTE_SIZE;
 
 static lv_style_t defaultStyle;
 static lv_style_t iconStyle;
@@ -124,40 +125,45 @@ static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t io_panel,
 
 static void lvgl_flush_callback(lv_display_t *disp, const lv_area_t *area,
                                 uint8_t *px_map) {
-  // see:https://github.com/espressif/esp-idf/blob/master/examples/peripherals/lcd/i2c_oled/main/i2c_oled_example_main.c
   esp_lcd_panel_handle_t panel_handle =
       static_cast<esp_lcd_panel_handle_t>(lv_display_get_user_data(disp));
+  const int hor_res = lv_display_get_physical_horizontal_resolution(disp);
+
+  // Skip palette bytes
   px_map += PALETTE_SIZE;
 
-  uint16_t hor_res = lv_display_get_physical_horizontal_resolution(disp);
-  int x1 = area->x1;
-  int x2 = area->x2;
-  int y1 = area->y1;
-  int y2 = area->y2;
+  int x1 = area->x1, x2 = area->x2;
+  int y1 = area->y1, y2 = area->y2;
 
-  for (int y = y1; y <= y2; y++) {
-    for (int x = x1; x <= x2; x++) {
-      /* The order of bits is MSB first
-                  MSB           LSB
-         bits      7 6 5 4 3 2 1 0
-         pixels    0 1 2 3 4 5 6 7
-                  Left         Right
-      */
-      bool chroma_color =
-          (px_map[(hor_res >> 3) * y + (x >> 3)] & 1 << (7 - x % 8));
+  // For each column and SSD1306 page (8 rows)
+  for (int col = x1; col <= x2; ++col) {
+    for (int page = y1 / 8; page <= y2 / 8; ++page) {
+      uint8_t page_byte = 0;
+      for (int bit = 0; bit < 8; ++bit) {
+        int y = page * 8 + bit;
+        if (y < y1 || y > y2)
+          continue;
 
-      /* Write to the buffer as required for the display.
-       * It writes only 1-bit for monochrome displays mapped vertically.*/
-      uint8_t *buf = oled_buffer + hor_res * (y >> 3) + (x);
-      if (chroma_color) {
-        (*buf) &= ~(1 << (y % 8));
-      } else {
-        (*buf) |= (1 << (y % 8));
+        // LVGL buffer: (y * hor_res + col) => bit in the buffer
+        size_t px_offset = y * hor_res + col;
+        size_t byte_offset = px_offset / 8;
+        size_t bit_offset = 7 - (px_offset % 8);
+
+        // LVGL: 1 = black (background), 0 = white (foreground)
+        // SSD1306: 1 = pixel ON, 0 = pixel OFF
+        // You might need to invert here depending on your desired color theme
+        bool pixel_on = ((px_map[byte_offset] >> bit_offset) & 0x1) ==
+                        0; // Invert for white foreground
+
+        if (pixel_on)
+          page_byte |= (1 << bit);
       }
+      oled_buffer[page * OLED_WIDTH + col] = page_byte;
     }
   }
-  // pass the draw buffer to the driver
+
   esp_lcd_panel_draw_bitmap(panel_handle, x1, y1, x2 + 1, y2 + 1, oled_buffer);
+  lv_display_flush_ready(disp);
 }
 
 void OledDisplay::init() {
