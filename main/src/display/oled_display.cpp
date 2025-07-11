@@ -1,12 +1,10 @@
 #include "display/oled_display.h"
 
+#include "display/lv_font.h"
+#include <cstring>
 #include <ctime>
 #include <driver/i2c_master.h>
 #include <esp_err.h>
-#include <lvgl.h>
-
-#include "display/lv_font.h"
-#include <cstring>
 
 using namespace agent;
 
@@ -123,8 +121,8 @@ static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t io_panel,
   return false;
 }
 
-static void lvgl_flush_callback(lv_display_t *disp, const lv_area_t *area,
-                                uint8_t *px_map) {
+void OledDisplay::lvgl_flush_callback(lv_display_t *disp, const lv_area_t *area,
+                                      uint8_t *px_map) {
   esp_lcd_panel_handle_t panel_handle =
       static_cast<esp_lcd_panel_handle_t>(lv_display_get_user_data(disp));
   const int hor_res = lv_display_get_physical_horizontal_resolution(disp);
@@ -166,6 +164,14 @@ static void lvgl_flush_callback(lv_display_t *disp, const lv_area_t *area,
   lv_display_flush_ready(disp);
 }
 
+void OledDisplay::updateClockCallback(lv_timer_t *timer) {
+  OledDisplay *self = static_cast<OledDisplay *>(timer->user_data);
+  if (!self)
+    return;
+
+  self->update_time();
+}
+
 void OledDisplay::init() {
   lv_init();
 
@@ -175,8 +181,13 @@ void OledDisplay::init() {
   display_ = lv_display_create(OLED_WIDTH, OLED_HEIGHT);
   lv_display_set_user_data(display_, panel_handle_);
   lv_display_set_color_format(display_, LV_COLOR_FORMAT_I1);
+  /**
+   * LV_DISPLAY_RENDER_MODE_PARTIAL
+   * For partial mode, LVGL expects the buffer to be at least as big as the
+   * largest area you’ll flush (e.g., a whole row or column).
+   */
   lv_display_set_buffers(display_, lvgl_draw_buffer_, NULL, buffer_size,
-                         LV_DISPLAY_RENDER_MODE_PARTIAL);
+                         LV_DISPLAY_RENDER_MODE_FULL);
   lv_display_set_flush_cb(display_, lvgl_flush_callback);
 
   const esp_lcd_panel_io_callbacks_t cbs = {
@@ -191,6 +202,8 @@ void OledDisplay::init() {
       .name = "lvgl_tick",
       .skip_unhandled_events = false,
   };
+  esp_timer_create(&timer_args, &lvgl_tick_timer_);
+  esp_timer_start_periodic(lvgl_tick_timer_, LVGL_TICK_PERIOD_MS * 1000);
 
   splash_screen_ = lv_obj_create(NULL);
   main_screen_ = lv_obj_create(NULL);
@@ -208,6 +221,8 @@ void OledDisplay::init() {
   // vTaskDelay(pdMS_TO_TICKS(2000));
 
   show_active_screen();
+
+  clock_timer = lv_timer_create(&OledDisplay::updateClockCallback, 1000, this);
 }
 
 void OledDisplay::refresh() {}
@@ -284,7 +299,7 @@ void OledDisplay::create_main_screen() {
                         LV_FLEX_ALIGN_CENTER);
 
   time_label_ = lv_label_create(info_bar_);
-  lv_label_set_text(time_label_, "12:08");
+  lv_label_set_text(time_label_, "12:08:05");
   lv_obj_add_style(time_label_, &monoStyle, 0);
 }
 
@@ -294,7 +309,7 @@ void OledDisplay::update_time() {
   time(&now);
   localtime_r(&now, &timeinfo);
   static char time_str[32];
-  strftime(time_str, sizeof(time_str), "%H:%M", &timeinfo);
+  strftime(time_str, sizeof(time_str), "%H:%M:%S", &timeinfo);
 
   lv_label_set_text(this->time_label_, time_str);
 }
