@@ -21,7 +21,7 @@ const RgbColor WARNING_COLOR = RgbColor(0, 0, 10);
 #define TAG "application"
 
 Application::Application()
-    : state_(AppState::BOOTING), led_(nullptr), oled_(nullptr),
+    : state_(AppState::UNKNOWN), led_(nullptr), oled_(nullptr),
       network_(nullptr), speaker_(nullptr), mic_(nullptr) {
   event_group_ = xEventGroupCreate();
   state_mutex_ = xSemaphoreCreateMutex();
@@ -51,6 +51,10 @@ void Application::start() {
 
   led_->init();
   oled_->init();
+
+  // switch to booting when basic devices ready
+  set_state(AppState::BOOTING);
+
   network_->init();
   speaker_->init_speaker();
   mic_->init();
@@ -58,7 +62,11 @@ void Application::start() {
   xTaskCreatePinnedToCore(main_task, "Main_Task", 8192, this, 2,
                           &main_task_handle_, APP_CPU_NUM);
   xTaskCreate(ui_task, "UI_Task", 8192, this, 1, &display_task_handle_);
+  ui_queue = xQueueCreate(4, sizeof(UiStatus));
 
+  if (ui_queue == NULL) {
+    ESP_LOGE("UI", "Failed to create ui_queue!");
+  }
   // set_state(AppState::kIdle);
   // speaker_->test();
 }
@@ -127,6 +135,13 @@ void Application::main_task(void *arg) {
     if (bits & Events::APP_STATE_CHANGED) {
       AppState s = app->get_state();
       ESP_LOGI(TAG, "app state changed->%d", s);
+      switch (s) {
+      case AppState::BOOTING:
+        app->handle_booting_state();
+        break;
+      default:
+        break;
+      }
     } else if (bits & Events::NETWORK_STATE_CHANGED) {
       NetworkState s = app->get_network_state();
       ESP_LOGI(TAG, "app state changed->%d", s);
@@ -136,25 +151,50 @@ void Application::main_task(void *arg) {
 
 void Application::ui_task(void *arg) {
   Application *app = static_cast<Application *>(arg);
+
+  // Watchdog: Register task if needed (ESP-IDF usually does this automatically
+  // for FreeRTOS tasks)
+
+  UiStatus ui_status;
+  TickType_t last_wd_feed = xTaskGetTickCount();
+
   while (1) {
+    // 1. Handle incoming UI messages
+    // Use a non-blocking receive to allow LVGL to run smoothly
+    while (xQueueReceive(app->ui_queue, &ui_status, 0) == pdTRUE) {
+      // Update LVGL UI elements based on ui_status
+      // (You should implement a method like app->update_ui(ui_status);)
+      app->oled_->updateUi(ui_status);
+    }
+
+    // 2. Handle LVGL timers and screen refresh
     uint32_t time_till_next = lv_timer_handler();
     if (time_till_next == LV_NO_TIMER_READY) {
       time_till_next = LV_DEF_REFR_PERIOD;
     }
 
-    // 将毫秒转换为FreeRTOS
-    // ticks（注意：pdMS_TO_TICKS可能不支持0，所以需要处理）
+    // 3. Watchdog: Feed periodically (if you use esp_task_wdt)
+    // Feed every 1s or as needed, depending on your watchdog configuration
+    if ((xTaskGetTickCount() - last_wd_feed) > pdMS_TO_TICKS(1000)) {
+      // esp_task_wdt_reset(); // Uncomment if you manually feed the watchdog
+      last_wd_feed = xTaskGetTickCount();
+    }
+
+    // 4. Delay according to LVGL's needs, yield CPU if needed
     if (time_till_next > 0) {
       vTaskDelay(pdMS_TO_TICKS(time_till_next));
     } else {
-      // 如果time_till_next为0，表示需要立即再次调用，但我们不能无延迟地循环，所以让出CPU
+      // Prevent tight loop, yield CPU
       taskYIELD();
     }
   }
 }
 
 void Application::handle_booting_state() {
-  oled_->show_splash_screen();
+  ESP_LOGI(TAG, "handling booting...");
+  led_->blink(WARNING_COLOR.r, WARNING_COLOR.g, WARNING_COLOR.b, 500);
+  UiStatus ui;
+  xQueueSend(ui_queue, &ui, portMAX_DELAY);
   // network_->connect();
   set_state(AppState::NETWORK_CONNECTING);
 }
@@ -185,27 +225,6 @@ void Application::handle_idle_state() {
 
 void Application::handle_active_state() {}
 void Application::handle_error_state() {}
-
-void Application::update_display() {
-  switch (get_state()) {
-  case AppState::BOOTING:
-    led_->blink(WARNING_COLOR.r, WARNING_COLOR.g, WARNING_COLOR.b, 500);
-    break;
-  case AppState::IDLE:
-    led_->show(READY_COLOR.r, READY_COLOR.g, READY_COLOR.b);
-    oled_->show_idle_screen();
-    break;
-  case AppState::ACTIVE:
-    // oled_->show_active_screen(sensor_->latest_data());
-    break;
-  case AppState::APP_ERROR:
-    // oled_->show_error_screen(network_->last_error());
-    break;
-  default:
-    led_->show(READY_COLOR.r, READY_COLOR.g, READY_COLOR.b);
-    break;
-  }
-}
 
 void Application::reboot() {
   ESP_LOGI(TAG, "rebooting the application...");

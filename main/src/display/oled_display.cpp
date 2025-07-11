@@ -182,7 +182,7 @@ void OledDisplay::init() {
   lv_display_set_user_data(display_, panel_handle_);
   lv_display_set_color_format(display_, LV_COLOR_FORMAT_I1);
   /**
-   * LV_DISPLAY_RENDER_MODE_PARTIAL
+   * TODO: does not work with LV_DISPLAY_RENDER_MODE_PARTIAL
    * For partial mode, LVGL expects the buffer to be at least as big as the
    * largest area you’ll flush (e.g., a whole row or column).
    */
@@ -220,20 +220,17 @@ void OledDisplay::init() {
   // test_display();
   // vTaskDelay(pdMS_TO_TICKS(2000));
 
-  show_active_screen();
+  lv_scr_load(splash_screen_);
 
   clock_timer = lv_timer_create(&OledDisplay::updateClockCallback, 1000, this);
 }
 
-void OledDisplay::refresh() {}
-void OledDisplay::show_splash_screen() { lv_scr_load(splash_screen_); }
-void OledDisplay::show_network_status(bool connected) {
-  lv_scr_load(main_screen_);
-}
-void OledDisplay::show_idle_screen() { lv_scr_load(main_screen_); }
-void OledDisplay::show_active_screen() { lv_scr_load(main_screen_); }
-void OledDisplay::show_error_screen(const char *error) {
-  lv_scr_load(main_screen_);
+void OledDisplay::updateUi(UiStatus i) {
+  if (i.screen == Screen::Splash) {
+    lv_scr_load(splash_screen_);
+  } else if (i.screen == Screen::Main) {
+    lv_scr_load(main_screen_);
+  }
 }
 
 void OledDisplay::create_splash_screen() {

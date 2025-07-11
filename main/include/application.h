@@ -49,7 +49,6 @@ private:
   void sync_time();
   void set_state(AppState state);
   NetworkState get_network_state() const { return network_->get_state(); }
-  void update_display();
 
 private:
   AppState state_;
@@ -61,6 +60,7 @@ private:
 
 private:
   EventGroupHandle_t event_group_;
+  QueueHandle_t ui_queue;
   SemaphoreHandle_t state_mutex_;
   TaskHandle_t main_task_handle_;
   TaskHandle_t display_task_handle_;

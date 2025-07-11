@@ -14,6 +14,7 @@
 
 #include "device.h"
 #include "event.h"
+#include "ui_status.h"
 
 namespace agent {
 class OledDisplay : public Device {
@@ -23,13 +24,7 @@ public:
 
 public:
   void init() override;
-  void refresh();
-
-  void show_splash_screen();
-  void show_network_status(bool connected);
-  void show_idle_screen();
-  void show_active_screen();
-  void show_error_screen(const char *error);
+  void updateUi(UiStatus i);
 
   void update_time();
 
