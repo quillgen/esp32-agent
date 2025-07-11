@@ -8,6 +8,7 @@ set(SOURCES "src/led/fast_hsv2rgb_32bit.c"
     "src/display/wqy_st_14.c"
     "src/display/md_icons_14.c"
     "src/display/inconsolata_14.c"
+    "src/display/inter_32.c"
     "src/application.cpp"
     "main.cpp"
 )

@@ -32,7 +32,7 @@ OledDisplay::OledDisplay()
       welcome_(nullptr), main_screen_(nullptr), status_bar_(nullptr),
       battery_label_(nullptr), wifi_label_(nullptr), bluetooth_label_(nullptr),
       mic_label_(nullptr), radar_label_(nullptr), time_label_(nullptr),
-      main_label_(nullptr) {
+      gear_label_(nullptr) {
   lvgl_draw_buffer_ = new uint8_t[buffer_size];
 }
 
@@ -277,18 +277,11 @@ void OledDisplay::create_main_screen() {
   lv_obj_add_style(mic_label_, &iconStyle, 0);
   lv_obj_add_style(radar_label_, &iconStyle, 0);
 
-  lv_obj_t *spacer = lv_obj_create(status_bar_);
-  lv_obj_set_flex_grow(spacer, 1); // 关键：占据剩余空间
-  lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, LV_PART_MAIN); // 透明
-  lv_obj_set_style_border_width(spacer, 0, LV_PART_MAIN);
-
-  // Add main content
-  main_label_ = lv_label_create(main_screen_);
-  lv_label_set_text(main_label_,
-                    "人类的悲欢并不相通，\n我只是觉得他们吵闹。\n——鲁迅");
-  lv_obj_set_style_text_font(main_label_, &wqy_st_14, 0);
-  lv_obj_set_style_text_align(main_label_, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_center(main_label_);
+  gear_label_ = lv_label_create(main_screen_);
+  lv_label_set_text(gear_label_, "P");
+  lv_obj_set_style_text_font(gear_label_, &inter_32, 0);
+  lv_obj_set_style_text_align(gear_label_, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_center(gear_label_);
 
   info_bar_ = lv_obj_create(main_screen_);
   lv_obj_set_size(info_bar_, OLED_WIDTH, STATUS_BAR_HEIGHT);
@@ -301,6 +294,15 @@ void OledDisplay::create_main_screen() {
   time_label_ = lv_label_create(info_bar_);
   lv_label_set_text(time_label_, "12:08:05");
   lv_obj_add_style(time_label_, &monoStyle, 0);
+
+  lv_obj_t *spacer = lv_obj_create(info_bar_);
+  lv_obj_set_flex_grow(spacer, 1);
+  lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, LV_PART_MAIN);
+  lv_obj_set_style_border_width(spacer, 0, LV_PART_MAIN);
+
+  status_label_ = lv_label_create(info_bar_);
+  lv_label_set_text(status_label_, "就绪");
+  lv_obj_add_style(status_label_, &defaultStyle, 0);
 }
 
 void OledDisplay::update_time() {

@@ -20,5 +20,6 @@
 extern lv_font_t wqy_st_14;
 extern lv_font_t md_icons_14;
 extern lv_font_t inconsolata_14;
+extern lv_font_t inter_32;
 
 #endif

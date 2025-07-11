@@ -3,7 +3,7 @@ lv_font_conv --bpp 1 \
     --size 14 \
     --no-compress \
     --font ./assets/WenQuanYi.Bitmap.Song.12px.ttf \
-    --symbols 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,:网络初始化正在同步时间系统加载中. \
+    --symbols 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz,:网络初始化正在同步时间系统加载中就绪错误. \
     --format lvgl \
     -o ./main/src/display/wqy_st_14.c
 
@@ -23,3 +23,11 @@ lv_font_conv --bpp 1 \
     --format lvgl \
     --force-fast-kern-format \
     -o ./main/src/display/md_icons_14.c
+
+lv_font_conv --bpp 4 \
+    --size 32 \
+    --no-compress \
+    --font ./assets/InterVariable.ttf \
+    --symbols PSDRN \
+    --format lvgl \
+    -o ./main/src/display/inter_32.c
