@@ -41,7 +41,7 @@ private:
   static void ui_task(void *arg);
 
   void handle_booting_state();
-  void handle_network_connecting_state();
+  void handle_network_state(NetworkState s);
   void handle_idle_state();
   void handle_active_state();
   void handle_error_state();

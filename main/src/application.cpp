@@ -127,11 +127,12 @@ void Application::main_task(void *arg) {
   Application *app = static_cast<Application *>(arg);
   const TickType_t xDelay = pdMS_TO_TICKS(500); // 500ms超时
   while (true) {
-    EventBits_t bits =
-        xEventGroupWaitBits(app->event_group_, Events::APP_STATE_CHANGED,
-                            pdTRUE,  // 清除事件位
-                            pdFALSE, // 不等待所有位
-                            xDelay);
+    EventBits_t bits = xEventGroupWaitBits(app->event_group_,
+                                           Events::APP_STATE_CHANGED |
+                                               Events::NETWORK_STATE_CHANGED,
+                                           pdTRUE,  // 清除事件位
+                                           pdFALSE, // 不等待所有位
+                                           xDelay);
     if (bits & Events::APP_STATE_CHANGED) {
       AppState s = app->get_state();
       ESP_LOGI(TAG, "app state changed->%d", s);
@@ -144,7 +145,8 @@ void Application::main_task(void *arg) {
       }
     } else if (bits & Events::NETWORK_STATE_CHANGED) {
       NetworkState s = app->get_network_state();
-      ESP_LOGI(TAG, "app state changed->%d", s);
+      ESP_LOGI(TAG, "network state changed->%d", s);
+      app->handle_network_state(s);
     }
   }
 }
@@ -194,19 +196,32 @@ void Application::handle_booting_state() {
   ESP_LOGI(TAG, "handling booting...");
   led_->blink(WARNING_COLOR.r, WARNING_COLOR.g, WARNING_COLOR.b, 500);
   UiStatus ui;
+  ui.screen = Screen::Main;
   xQueueSend(ui_queue, &ui, portMAX_DELAY);
-  // network_->connect();
-  set_state(AppState::NETWORK_CONNECTING);
 }
 
-void Application::handle_network_connecting_state() {
-  // if (network_->is_connected()) {
-  //   set_state(AppState::IDLE);
-  // } else if (network_->connection_failed()) {
-  //   set_state(AppState::ERROR);
-  // }
-
-  // oled_->show_network_status(network_->status());
+void Application::handle_network_state(NetworkState s) {
+  UiStatus ui;
+  ui.screen = Screen::Main;
+  switch (s) {
+  case NetworkState::DISCONNECTED:
+    ui.wifi = WifiStatus::Off;
+    break;
+  case NetworkState::CONNECTING:
+    ui.wifi = WifiStatus::Off;
+    break;
+  case NetworkState::CONNECTED:
+    ui.wifi = WifiStatus::On;
+    break;
+  case NetworkState::NETWORK_ERROR:
+    ui.wifi = WifiStatus::Off;
+    ui.warning = WarningStatus::Warning;
+    break;
+  default:
+    break;
+  }
+  ESP_LOGI(TAG, "==>%d, %d", s, ui.wifi);
+  xQueueSend(ui_queue, &ui, portMAX_DELAY);
 }
 
 void Application::handle_idle_state() {

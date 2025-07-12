@@ -5,6 +5,7 @@
 #include <ctime>
 #include <driver/i2c_master.h>
 #include <esp_err.h>
+#include <esp_log.h>
 
 using namespace agent;
 
@@ -226,11 +227,13 @@ void OledDisplay::init() {
 }
 
 void OledDisplay::updateUi(UiStatus i) {
+  ESP_LOGI(TAG, "=> %d", i.wifi);
   if (i.screen == Screen::Splash) {
     lv_scr_load(splash_screen_);
   } else if (i.screen == Screen::Main) {
     lv_scr_load(main_screen_);
   }
+  setWifiStatus(i.wifi);
 }
 
 void OledDisplay::create_splash_screen() {
@@ -263,7 +266,7 @@ void OledDisplay::create_main_screen() {
   bluetooth_label_ = lv_label_create(status_bar_);
   mic_label_ = lv_label_create(status_bar_);
   radar_label_ = lv_label_create(status_bar_);
-  lv_label_set_text(wifi_label_, MD_ICON_SINGAL_ON);
+  setWifiStatus(WifiStatus::Off);
   lv_label_set_text(battery_label_, MD_ICON_BATTERY_75);
   lv_label_set_text(bluetooth_label_, MD_ICON_BLUETOOTH_ON);
   lv_label_set_text(mic_label_, MD_ICON_MIC);
@@ -302,6 +305,14 @@ void OledDisplay::create_main_screen() {
   lv_obj_add_style(status_label_, &defaultStyle, 0);
 }
 
+void OledDisplay::setWifiStatus(WifiStatus s) {
+  ESP_LOGI(TAG, "updating wifi status->%d", s);
+  if (s == WifiStatus::Off) {
+    lv_label_set_text(wifi_label_, MD_ICON_SINGAL_OFF);
+  } else {
+    lv_label_set_text(wifi_label_, MD_ICON_SINGAL_ON);
+  }
+}
 void OledDisplay::update_time() {
   time_t now;
   struct tm timeinfo;

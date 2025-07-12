@@ -72,7 +72,6 @@ void RgbLed::show(uint8_t r, uint8_t g, uint8_t b) {
 void RgbLed::blink(uint8_t r, uint8_t g, uint8_t b, int interval_ms) {
   blink_color_ = RgbColor{r, g, b};
   start_timer(interval_ms, [this]() {
-    ESP_LOGI(TAG, "blinking...%d", blink_state_);
     if (blink_state_) {
       auto color = blink_color_;
       led_strip_set_pixel(led_strip_, 0, color.r, color.g, color.b);

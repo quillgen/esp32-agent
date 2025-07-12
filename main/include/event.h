@@ -8,8 +8,6 @@ namespace agent {
 enum AppState {
   UNKNOWN,
   BOOTING,
-  NETWORK_CONNECTING,
-  NETWORK_CONNECTED,
   IDLE,
   ACTIVE,
   APP_ERROR,

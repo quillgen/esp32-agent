@@ -42,6 +42,8 @@ private:
                                   uint8_t *px_map);
   static void updateClockCallback(lv_timer_t *timer);
 
+  void setWifiStatus(WifiStatus s);
+
 private:
   i2c_master_bus_handle_t i2c_bus_;
   esp_lcd_panel_handle_t panel_handle_;
