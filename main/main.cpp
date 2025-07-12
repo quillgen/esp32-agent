@@ -41,6 +41,7 @@ extern "C" void app_main(void) {
   ESP_LOGI(TAG, "time: year(%d)", timeinfo.tm_year);
 
   init_flash();
+  mountSpiffs();
 
   check_psram();
 

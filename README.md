@@ -6,6 +6,7 @@ AI Agent client powered by ESP32S3.
 
 * ESP32S3 board
 * ESP-IDF configured
+* ESP-ADF
 
 ## Get started
 For vscode esp-idf extension, you must run "Set Espressif device target" to esp32s3.

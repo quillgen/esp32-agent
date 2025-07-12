@@ -3,10 +3,8 @@
 #include "device.h"
 #include <driver/gpio.h>
 #include <driver/i2s.h>
-#include <math.h>
-
 #include <esp_log.h>
-
+#include <math.h>
 #include <string.h>
 
 using namespace agent;

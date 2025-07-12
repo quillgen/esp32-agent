@@ -1,6 +1,7 @@
 #include "flash.h"
 
 #include <esp_log.h>
+#include <esp_spiffs.h>
 #include <nvs.h>
 #include <nvs_flash.h>
 
@@ -14,5 +15,14 @@ void agent::init_flash() {
     ESP_ERROR_CHECK(nvs_flash_erase());
     ret = nvs_flash_init();
   }
+  ESP_ERROR_CHECK(ret);
+}
+
+void agent::mountSpiffs() {
+  esp_vfs_spiffs_conf_t conf = {.base_path = "/spiffs",
+                                .partition_label = NULL,
+                                .max_files = 5,
+                                .format_if_mount_failed = true};
+  esp_err_t ret = esp_vfs_spiffs_register(&conf);
   ESP_ERROR_CHECK(ret);
 }

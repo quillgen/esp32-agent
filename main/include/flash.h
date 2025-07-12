@@ -3,5 +3,7 @@
 
 namespace agent {
 void init_flash();
-}
+void mountSpiffs();
+} // namespace agent
+
 #endif

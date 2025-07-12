@@ -15,5 +15,5 @@ set(SOURCES "src/led/fast_hsv2rgb_32bit.c"
 
 idf_component_register(SRCS ${SOURCES}
     PRIV_REQUIRES spi_flash
-    REQUIRES driver esp_timer esp_lcd nvs_flash esp_event esp_wifi esp_http_client esp_psram
+    REQUIRES driver esp_timer esp_lcd nvs_flash esp_event esp_wifi esp_http_client esp_psram spiffs
     INCLUDE_DIRS "include")
