@@ -39,6 +39,7 @@ private:
 private:
   static void main_task(void *arg);
   static void ui_task(void *arg);
+  static void sync_time_task(void *arg);
 
   void handle_booting_state();
   void handle_network_state(NetworkState s);
@@ -46,7 +47,6 @@ private:
   void handle_active_state();
   void handle_error_state();
 
-  void sync_time();
   void set_state(AppState state);
   NetworkState get_network_state() const { return network_->get_state(); }
 

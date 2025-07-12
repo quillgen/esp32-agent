@@ -75,7 +75,9 @@ void time_sync_notification_cb(struct timeval *tv) {
   ESP_LOGI(TAG, "sntp time sync done!");
 }
 
-void Application::sync_time() {
+void Application::sync_time_task(void *arg) {
+  Application *app = static_cast<Application *>(arg);
+
   esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG(NTP_SERVER_1);
   config.sync_cb = time_sync_notification_cb;
   esp_netif_sntp_init(&config);
@@ -101,6 +103,7 @@ void Application::sync_time() {
   char strftime_buf[64];
   strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
   ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
+  vTaskDelete(NULL);
 }
 
 void Application::set_state(AppState s) {
@@ -212,6 +215,7 @@ void Application::handle_network_state(NetworkState s) {
     break;
   case NetworkState::CONNECTED:
     ui.wifi = WifiStatus::On;
+    xTaskCreate(sync_time_task, "sync_time_task", 4096, this, 5, NULL);
     break;
   case NetworkState::NETWORK_ERROR:
     ui.wifi = WifiStatus::Off;
