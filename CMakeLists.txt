@@ -9,3 +9,4 @@ idf_build_set_property(MINIMAL_BUILD ON)
 add_compile_definitions(LV_LVGL_H_INCLUDE_SIMPLE)
 
 project(walle)
+spiffs_create_partition_image(spiffs spiffs_image FLASH_IN_PROJECT)

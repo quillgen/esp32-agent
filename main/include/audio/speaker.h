@@ -11,6 +11,7 @@ public:
   void test();
   static void http_stream_task(void *pvParameters);
   static esp_err_t http_event_handler(esp_http_client_event_t *e);
+  static void play_mp3_task(void *pvParameters);
 };
 } // namespace agent
 #endif

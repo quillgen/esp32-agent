@@ -34,3 +34,6 @@ Clean all:
 ```bash
 idf.py fullclean
 ```
+
+Mp3 source:
+https://voicewiki.cn/wiki/%E7%81%B0%E7%86%8A%E5%9D%A6%E5%85%8B%EF%BC%88%E7%BA%A2%E8%89%B2%E8%AD%A6%E6%88%922%EF%BC%89

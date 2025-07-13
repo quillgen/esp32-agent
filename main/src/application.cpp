@@ -25,6 +25,11 @@ Application::Application()
       network_(nullptr), speaker_(nullptr), mic_(nullptr) {
   event_group_ = xEventGroupCreate();
   state_mutex_ = xSemaphoreCreateMutex();
+  ui_queue = xQueueCreate(4, sizeof(UiStatus));
+
+  if (ui_queue == NULL) {
+    ESP_LOGE("UI", "Failed to create ui_queue!");
+  }
 }
 
 Application::~Application() {
@@ -59,14 +64,12 @@ void Application::start() {
   speaker_->init_speaker();
   mic_->init();
 
+  speaker_->test();
+
   xTaskCreatePinnedToCore(main_task, "Main_Task", 8192, this, 2,
                           &main_task_handle_, APP_CPU_NUM);
-  xTaskCreate(ui_task, "UI_Task", 8192, this, 1, &display_task_handle_);
-  ui_queue = xQueueCreate(4, sizeof(UiStatus));
 
-  if (ui_queue == NULL) {
-    ESP_LOGE("UI", "Failed to create ui_queue!");
-  }
+  xTaskCreate(ui_task, "UI_Task", 8192, this, 1, &display_task_handle_);
   // set_state(AppState::kIdle);
   // speaker_->test();
 }

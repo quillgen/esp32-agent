@@ -25,4 +25,12 @@ void agent::mountSpiffs() {
                                 .format_if_mount_failed = true};
   esp_err_t ret = esp_vfs_spiffs_register(&conf);
   ESP_ERROR_CHECK(ret);
+
+  size_t total = 0, used = 0;
+  ret = esp_spiffs_info(NULL, &total, &used);
+  if (ret != ESP_OK) {
+    ESP_LOGE(TAG, "Failed to get SPIFFS partition information");
+  } else {
+    ESP_LOGI(TAG, "SPIFFS: total=%d, used=%d", total, used);
+  }
 }

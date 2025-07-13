@@ -3,6 +3,7 @@
 #include "device.h"
 #include <driver/gpio.h>
 #include <driver/i2s.h>
+#include <esp_check.h>
 #include <esp_log.h>
 #include <math.h>
 #include <string.h>
@@ -94,13 +95,87 @@ esp_err_t speaker::http_event_handler(esp_http_client_event_t *e) {
   return ESP_OK;
 }
 
+#define WAV_FILE "/spiffs/Vgraata.wav"
+#define BUFFER_SIZE 4096
+
+static void play_wav_task(void *arg) {
+  ESP_LOGI(TAG, "Opening WAV file");
+  FILE *file = fopen(WAV_FILE, "rb");
+  if (!file) {
+    ESP_LOGE(TAG, "Failed to open file");
+    vTaskDelete(NULL);
+  }
+
+  // 读取并验证WAV头
+  wav_header_t wav_header;
+  if (fread(&wav_header, sizeof(wav_header), 1, file) != 1) {
+    ESP_LOGE(TAG, "File read error");
+    fclose(file);
+    vTaskDelete(NULL);
+  }
+
+  // 验证WAV格式
+  if (memcmp(wav_header.chunk_id, "RIFF", 4) ||
+      memcmp(wav_header.format, "WAVE", 4)) {
+    ESP_LOGE(TAG, "Invalid WAV file");
+    fclose(file);
+    vTaskDelete(NULL);
+  }
+
+  ESP_LOGI(TAG, "WAV: %dHz, %d bits, %d channels", wav_header.sample_rate,
+           wav_header.bits_per_sample, wav_header.num_channels);
+
+  // 跳过扩展块（如果有）
+  size_t header_size = sizeof(wav_header);
+  while (memcmp(wav_header.data_subchunk_id, "data", 4) != 0) {
+    fseek(file, wav_header.data_subchunk_size, SEEK_CUR);
+    fread(&wav_header.data_subchunk_id, 4, 1, file);
+    fread(&wav_header.data_subchunk_size, 4, 1, file);
+    header_size += 8;
+  }
+
+  ESP_LOGI(TAG, "Data size: %d bytes", wav_header.data_subchunk_size);
+
+  // 准备音频缓冲区
+  uint8_t *buffer = (uint8_t *)malloc(BUFFER_SIZE);
+  if (!buffer) {
+    ESP_LOGE(TAG, "Malloc failed");
+    fclose(file);
+    vTaskDelete(NULL);
+  }
+
+  // 音频播放循环
+  size_t bytes_read;
+  size_t bytes_written;
+  uint32_t total_bytes_read = 0;
+
+  while ((bytes_read = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
+    // 更新总字节数
+    total_bytes_read += bytes_read;
+
+    // 写入I2S
+    i2s_write(I2S_NUM_0, buffer, bytes_read, &bytes_written, portMAX_DELAY);
+
+    // 检查是否播放完成
+    if (total_bytes_read >= wav_header.data_subchunk_size) {
+      break;
+    }
+  }
+
+  // 清理
+  free(buffer);
+  fclose(file);
+  ESP_LOGI(TAG, "Playback finished");
+  vTaskDelete(NULL);
+}
 void speaker::test() {
   /**
    * generate test audio:
    * ffmpeg -i 1.mp3 -ar 16000 -ac 2 -acodec pcm_s16le 1.wav
    */
-  xTaskCreate(speaker::http_stream_task, "http_stream", 4096 * 2, nullptr, 5,
-              nullptr);
+  // xTaskCreate(speaker::http_stream_task, "http_stream", 4096 * 2, nullptr, 5,
+  //             nullptr);
+  xTaskCreate(play_wav_task, "play_mp3_task", 4096 * 2, NULL, 5, NULL);
 }
 
 void speaker::http_stream_task(void *pvParameters) {
