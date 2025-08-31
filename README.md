@@ -40,5 +40,6 @@ https://voicewiki.cn/wiki/%E7%81%B0%E7%86%8A%E5%9D%A6%E5%85%8B%EF%BC%88%E7%BA%A2
 
 Generate 16kHz left channel wav file:
 ```bash
-ffmpeg -i input.mp3 -ar 16000 -ac 1 -map_channel 0.0.0 output.wav
+ffmpeg -i Vgramoc.mp3 -ar 16000 -ac 1 -map_channel 0.0.0 Vgramoc.mono.wav
+ffmpeg -i Vgramoc.mp3 -ar 16000 -ac 2 -acodec pcm_s16le Vgramoc.wav
 ```

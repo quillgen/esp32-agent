@@ -80,6 +80,11 @@ bool parse_wav_header(FILE *f, wav_info_t *info) {
 }
 
 static void i2s_init(const wav_info_t *info) {
+  esp_err_t err = i2s_driver_uninstall(I2S_NUM);
+  if (err != ESP_OK && err != ESP_ERR_NOT_FOUND) {
+    ESP_LOGE(TAG, "Failed to uninstall I2S: %s", esp_err_to_name(err));
+  }
+
   i2s_config_t i2s_config = {
       .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
       .sample_rate = info->sample_rate,
@@ -310,6 +315,10 @@ void speaker::test() {
   xTaskCreate(
       [](void *) {
         play_wav_file("/spiffs/Vgramoa.wav");
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        play_wav_file("/spiffs/Vgramoc.mono.wav");
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        play_wav_file("/spiffs/Vgramoc.wav");
         vTaskDelete(NULL);
       },
       "wav_player", 4096, NULL, 5, NULL);
