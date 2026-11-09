@@ -16,5 +16,6 @@ dependencies:
   #   public: true
   espressif/led_strip: '*'
   lvgl/lvgl: '*'
-  espressif/esp_audio_codec: ^2.3.0
-  espressif/esp-sr: ^2.1.4
+  # Re-add when MP3 playback / wake-word features are actually implemented:
+  #   espressif/esp_audio_codec: ^2.3.0
+  #   espressif/esp-sr: ^2.1.4

@@ -8,36 +8,34 @@
 
 using namespace agent;
 
-#define NTP_SERVER_1 "ntp.aliyun.com"
-#define NTP_SERVER_2 "ntp.aliyun.com"
-
 static const int MAX_RETRY_COUNT = 3;
 static const char *TAG = "🤖 NET";
 
-network::network(EventGroupHandle_t e)
+Network::Network(EventGroupHandle_t e)
     : state_(NetworkState::DISCONNECTED), retry_count_(0), event_group_(e),
       mutex_(xSemaphoreCreateMutex()) {}
 
-network::~network() {
+Network::~Network() {
   esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID,
                                &event_handler_static);
   esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP,
                                &event_handler_static);
-  vEventGroupDelete(event_group_);
+  // The event group is owned by Application; do not delete it here.
+  vSemaphoreDelete(mutex_);
 }
 
-void network::event_handler_static(void *arg, esp_event_base_t base,
+void Network::event_handler_static(void *arg, esp_event_base_t base,
                                    int32_t event_id, void *event_data) {
-  network *self = static_cast<network *>(arg);
+  Network *self = static_cast<Network *>(arg);
   if (self) {
     self->event_handler(base, event_id, event_data);
   } else {
-    ESP_LOGE(TAG, "failed to cast *arg -> network instance, network handler "
+    ESP_LOGE(TAG, "failed to cast *arg -> Network instance, network handler "
                   "will not work!");
   }
 }
 
-void network::event_handler(esp_event_base_t event_base, int32_t event_id,
+void Network::event_handler(esp_event_base_t event_base, int32_t event_id,
                             void *event_data) {
   if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
     ESP_LOGI(TAG, "connecting to wifi...");
@@ -65,7 +63,7 @@ void network::event_handler(esp_event_base_t event_base, int32_t event_id,
   }
 }
 
-void network::init() {
+void Network::init() {
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
   esp_netif_create_default_wifi_sta();
@@ -99,7 +97,7 @@ void network::init() {
   ESP_LOGI(TAG, "wifi initialized");
 }
 
-void network::set_state(NetworkState newState) {
+void Network::set_state(NetworkState newState) {
   if (xSemaphoreTake(mutex_, pdMS_TO_TICKS(20)) == pdTRUE) {
     if (state_ != newState) {
       state_ = newState;

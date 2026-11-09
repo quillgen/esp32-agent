@@ -108,6 +108,7 @@ void RgbLed::start_timer(int interval_ms, std::function<void()> callback) {
   std::lock_guard<std::mutex> lock(mutex_);
   esp_timer_stop(strip_timer_);
   strip_callback_ = callback;
-  esp_timer_start_periodic(strip_timer_, interval_ms * 500);
+  // esp_timer periods are in microseconds
+  esp_timer_start_periodic(strip_timer_, interval_ms * 1000);
   ESP_LOGI(TAG, "LED timer started");
 }

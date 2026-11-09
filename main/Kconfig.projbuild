@@ -7,6 +7,11 @@ menu "🤖 AGENT configuration"
         default 48
         help
             GPIO number (IOxx) of RGB led.
+    config AGENT_PLAY_BOOT_SOUND
+        bool "Play demo sound on boot"
+        default n
+        help
+            Play hardcoded WAV files from SPIFFS at startup (development aid).
     config ESP_WIFI_SSID
         string "WiFi SSID"
         default "ChinaNet-uvZD"

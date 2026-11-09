@@ -5,10 +5,10 @@
 #include <esp_event.h>
 
 namespace agent {
-class network {
+class Network {
 public:
-  network(EventGroupHandle_t e);
-  ~network();
+  Network(EventGroupHandle_t e);
+  ~Network();
 
 public:
   void init();

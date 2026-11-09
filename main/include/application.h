@@ -5,12 +5,13 @@
 #include <freertos/event_groups.h>
 #include <freertos/task.h>
 
+#include <atomic>
+
 #include "audio/mic.h"
 #include "audio/speaker.h"
 #include "display/oled_display.h"
 #include "event.h"
 #include "led/rgb_led.h"
-#include "mutex.h"
 #include "network.h"
 
 namespace agent {
@@ -54,8 +55,8 @@ private:
   AppState state_;
   RgbLed *led_;
   OledDisplay *oled_;
-  network *network_;
-  speaker *speaker_;
+  Network *network_;
+  Speaker *speaker_;
   Mic *mic_;
 
 private:
@@ -64,6 +65,7 @@ private:
   SemaphoreHandle_t state_mutex_;
   TaskHandle_t main_task_handle_;
   TaskHandle_t display_task_handle_;
+  std::atomic<bool> time_sync_running_{false};
 };
 } // namespace agent
 

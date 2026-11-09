@@ -9,14 +9,11 @@
 
 using namespace agent;
 
-static const int MAX_RETRY_COUNT = 3;
-
 const RgbColor ERROR_COLOR = RgbColor(10, 0, 0);
 const RgbColor READY_COLOR = RgbColor(0, 10, 0);
 const RgbColor WARNING_COLOR = RgbColor(0, 0, 10);
 
 #define NTP_SERVER_1 "ntp.aliyun.com"
-#define NTP_SERVER_2 "ntp.aliyun.com"
 
 #define TAG "application"
 
@@ -25,7 +22,9 @@ Application::Application()
       network_(nullptr), speaker_(nullptr), mic_(nullptr) {
   event_group_ = xEventGroupCreate();
   state_mutex_ = xSemaphoreCreateMutex();
-  ui_queue = xQueueCreate(4, sizeof(UiStatus));
+  // Latest-wins mailbox: UI producers never block, only the newest update
+  // matters. xQueueOverwrite() requires a queue length of 1.
+  ui_queue = xQueueCreate(1, sizeof(UiStatus));
 
   if (ui_queue == NULL) {
     ESP_LOGE("UI", "Failed to create ui_queue!");
@@ -45,12 +44,16 @@ Application::~Application() {
     delete oled_;
   }
   vEventGroupDelete(event_group_);
+  if (state_mutex_ != nullptr)
+    vSemaphoreDelete(state_mutex_);
+  if (ui_queue != nullptr)
+    vQueueDelete(ui_queue);
 }
 
 void Application::start() {
   led_ = new RgbLed((gpio_num_t)CONFIG_BLINK_GPIO);
-  network_ = new network(event_group_);
-  speaker_ = new speaker();
+  network_ = new Network(event_group_);
+  speaker_ = new Speaker();
   mic_ = new Mic();
   oled_ = new OledDisplay();
 
@@ -64,14 +67,14 @@ void Application::start() {
   speaker_->init_speaker();
   mic_->init();
 
+#if defined(CONFIG_AGENT_PLAY_BOOT_SOUND) && CONFIG_AGENT_PLAY_BOOT_SOUND
   speaker_->test();
+#endif
 
   xTaskCreatePinnedToCore(main_task, "Main_Task", 8192, this, 2,
                           &main_task_handle_, APP_CPU_NUM);
 
   xTaskCreate(ui_task, "UI_Task", 8192, this, 1, &display_task_handle_);
-  // set_state(AppState::kIdle);
-  // speaker_->test();
 }
 
 void time_sync_notification_cb(struct timeval *tv) {
@@ -106,6 +109,7 @@ void Application::sync_time_task(void *arg) {
   char strftime_buf[64];
   strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
   ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", strftime_buf);
+  app->time_sync_running_ = false;
   vTaskDelete(NULL);
 }
 
@@ -149,7 +153,8 @@ void Application::main_task(void *arg) {
       default:
         break;
       }
-    } else if (bits & Events::NETWORK_STATE_CHANGED) {
+    }
+    if (bits & Events::NETWORK_STATE_CHANGED) {
       NetworkState s = app->get_network_state();
       ESP_LOGI(TAG, "network state changed->%d", s);
       app->handle_network_state(s);
@@ -203,7 +208,7 @@ void Application::handle_booting_state() {
   led_->blink(WARNING_COLOR.r, WARNING_COLOR.g, WARNING_COLOR.b, 500);
   UiStatus ui;
   ui.screen = Screen::Main;
-  xQueueSend(ui_queue, &ui, portMAX_DELAY);
+  xQueueOverwrite(ui_queue, &ui);
 }
 
 void Application::handle_network_state(NetworkState s) {
@@ -218,7 +223,14 @@ void Application::handle_network_state(NetworkState s) {
     break;
   case NetworkState::CONNECTED:
     ui.wifi = WifiStatus::On;
-    xTaskCreate(sync_time_task, "sync_time_task", 4096, this, 5, NULL);
+    // Avoid spawning a second sync task if one is already running
+    // (e.g. on reconnect before the previous one finished).
+    if (!time_sync_running_.exchange(true)) {
+      if (xTaskCreate(sync_time_task, "sync_time_task", 4096, this, 5,
+                      NULL) != pdPASS) {
+        time_sync_running_ = false;
+      }
+    }
     break;
   case NetworkState::NETWORK_ERROR:
     ui.wifi = WifiStatus::Off;
@@ -228,7 +240,7 @@ void Application::handle_network_state(NetworkState s) {
     break;
   }
   ESP_LOGI(TAG, "==>%d, %d", s, ui.wifi);
-  xQueueSend(ui_queue, &ui, portMAX_DELAY);
+  xQueueOverwrite(ui_queue, &ui);
 }
 
 void Application::handle_idle_state() {
