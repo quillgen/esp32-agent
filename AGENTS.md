@@ -4,16 +4,20 @@ Smart toy car firmware. ESP32-S3 is the main controller (UI, audio, network); an
 
 ## Stack / layout
 
-- ESP-IDF 5.5, target `esp32s3`; the CMake project is named `walle`.
+- ESP-IDF 6.1, target `esp32s3`; the CMake project is named `walle`.
+- On this machine, activate the toolchain with `source ~/.espressif/tools/activate_idf_v6.1.sh` before running `idf.py`.
+- `sdkconfig.defaults` selects `partitions.csv` (factory 2 MiB + SPIFFS 1 MiB) and 8 MB flash; `sdkconfig` itself is gitignored.
 - `main/main.cpp` is the only entrypoint: initializes NVS, mounts SPIFFS, then starts `Application::instance()`.
 - State machine and tasks live in `main/src/application.cpp`: event-group bits wake `main_task`; `ui_task` owns LVGL.
-- Dependencies come from `main/idf_component.yml` via the IDF Component Manager (LVGL 9.2, led_strip, esp_audio_codec, esp-sr). `managed_components/` is generated; `dependencies.lock` is tracked.
+- Dependencies come from `main/idf_component.yml` via the IDF Component Manager (LVGL 9.5, led_strip 3.1.x for IDF 6 compatibility). `managed_components/` is generated; `dependencies.lock` is tracked.
+- IDF 6.1 removed the legacy I2S driver (`driver/i2s.h`); audio uses the `i2s_std` API and requires `esp_driver_i2s` in `main/CMakeLists.txt`.
 - Sources are listed explicitly in `main/CMakeLists.txt` — add new `.cpp` files there.
 - `doc/design-review.md` contains an approved refactor plan (event bus, services, RAII, DI). Follow it when restructuring `main/` instead of inventing a new architecture.
 
 ## Build / flash
 
 ```bash
+source ~/.espressif/tools/activate_idf_v6.1.sh
 idf.py set-target esp32s3   # sdkconfig is gitignored; needed once per checkout
 idf.py build
 idf.py -p /dev/cu.usbmodem14201 -b 115200 flash monitor
@@ -21,8 +25,10 @@ idf.py fullclean
 ```
 
 - README assumes a `get_idf` command is available (local alias/script); if `idf.py` is missing, source your ESP-IDF `export.sh`.
+- `sdkconfig.defaults` is applied automatically when `sdkconfig` is generated; it selects the custom partition table and 8 MB flash. If you change `partitions.csv`, delete `sdkconfig` and re-run `set-target`.
+- PSRAM is not enabled by default (`CONFIG_SPIRAM`); enable it in `menuconfig` on boards that have PSRAM.
 - SPIFFS is generated and flashed by CMake (`spiffs_create_partition_image(... FLASH_IN_PROJECT)`), so `idf.py flash` includes it. Do not use `write_spiffs_image.sh`: it writes a 0x210000-byte image into the 1 MiB `spiffs` partition.
-- There is no real test/lint setup. `pytest_hello_world.py` is a leftover IDF template expecting `Hello world!`; use a successful `idf.py build` as verification.
+- There is no real test/lint setup; use a successful `idf.py build` as verification.
 
 ## Architecture notes
 

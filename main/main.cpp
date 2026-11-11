@@ -20,6 +20,7 @@ static const char *TAG = "𓃰 main";
 RTC_DATA_ATTR static int boot_count = 0;
 
 void check_psram() {
+#if defined(CONFIG_SPIRAM) && CONFIG_SPIRAM
   // 检查PSRAM初始化状态
   if (esp_psram_is_initialized()) {
     size_t psram_size = esp_psram_get_size();
@@ -27,6 +28,9 @@ void check_psram() {
   } else {
     ESP_LOGW("PSRAM", "No PSRAM detected");
   }
+#else
+  ESP_LOGW("PSRAM", "PSRAM support is disabled in sdkconfig");
+#endif
 }
 
 extern "C" void app_main(void) {

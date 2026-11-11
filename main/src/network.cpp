@@ -5,6 +5,7 @@
 #include <esp_netif_sntp.h>
 #include <esp_sntp.h>
 #include <esp_wifi.h>
+#include <string.h>
 
 using namespace agent;
 
@@ -80,16 +81,14 @@ void Network::init() {
       IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler_static, this,
       &instance_got_ip));
 
-  wifi_config_t wifi_config = {
-      .sta =
-          {
-              .ssid = CONFIG_ESP_WIFI_SSID,
-              .password = CONFIG_ESP_WIFI_PASSWORD,
-              .threshold = {.authmode = WIFI_AUTH_WPA_WPA2_PSK},
-              // H2E is more safe, to use old WPA2 device, use WPA3_SAE_PWE_BOTH
-              .sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
-          },
-  };
+  wifi_config_t wifi_config = {};
+  strlcpy((char *)wifi_config.sta.ssid, CONFIG_ESP_WIFI_SSID,
+          sizeof(wifi_config.sta.ssid));
+  strlcpy((char *)wifi_config.sta.password, CONFIG_ESP_WIFI_PASSWORD,
+          sizeof(wifi_config.sta.password));
+  wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+  // H2E is more secure; use WPA3_SAE_PWE_BOTH for old WPA2-only devices
+  wifi_config.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
   ESP_ERROR_CHECK(esp_wifi_start());

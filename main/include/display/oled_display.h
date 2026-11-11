@@ -6,7 +6,6 @@
 #include <esp_lcd_panel_ssd1306.h>
 #include <esp_lcd_panel_vendor.h>
 #include <esp_timer.h>
-#include <freertos/event_groups.h>
 #include <lvgl.h>
 #include <lvgl_private.h>
 

@@ -27,7 +27,7 @@
 #include "led/fast_hsv2rgb.h"
 
 #if defined(HSV_USE_ASSEMBLY) && !defined(__AVR_ARCH__)
-#warning "Only AVR assembly is implemented. Other architectures use C fallback."
+// Only AVR assembly is implemented; other architectures use the C fallback.
 #undef HSV_USE_ASSEMBLY
 #endif
 

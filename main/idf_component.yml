@@ -14,8 +14,8 @@ dependencies:
   #   # `public` flag doesn't have an effect dependencies of the `main` component.
   #   # All dependencies of `main` are public by default.
   #   public: true
-  espressif/led_strip: '*'
-  lvgl/lvgl: '*'
+  espressif/led_strip: '^3.1.1'
+  lvgl/lvgl: '^9.5.0'
   # Re-add when MP3 playback / wake-word features are actually implemented:
   #   espressif/esp_audio_codec: ^2.3.0
   #   espressif/esp-sr: ^2.1.4

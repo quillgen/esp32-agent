@@ -3,6 +3,7 @@
 #include "display/lv_font.h"
 #include <cstring>
 #include <ctime>
+#include <driver/gpio.h>
 #include <driver/i2c_master.h>
 #include <esp_err.h>
 #include <esp_log.h>
@@ -46,39 +47,28 @@ OledDisplay::~OledDisplay() {
 }
 
 void OledDisplay::configure_i2c() {
-  i2c_master_bus_config_t bus_cfg = {
-      .i2c_port = (i2c_port_t)0,
-      .sda_io_num = (gpio_num_t)OLED_I2C_SDA_PIN,
-      .scl_io_num = (gpio_num_t)OLED_I2C_SCL_PIN,
-      .clk_source = I2C_CLK_SRC_DEFAULT,
-      .glitch_ignore_cnt = 7,
-      .intr_priority = 0,
-      .trans_queue_depth = 0,
-      .flags =
-          {
-              .enable_internal_pullup = 1,
-          },
-  };
+  i2c_master_bus_config_t bus_cfg = {};
+  bus_cfg.i2c_port = -1; // auto-select a free I2C port
+  bus_cfg.sda_io_num = (gpio_num_t)OLED_I2C_SDA_PIN;
+  bus_cfg.scl_io_num = (gpio_num_t)OLED_I2C_SCL_PIN;
+  bus_cfg.clk_source = I2C_CLK_SRC_DEFAULT;
+  bus_cfg.glitch_ignore_cnt = 7;
+  bus_cfg.intr_priority = 0;
+  bus_cfg.trans_queue_depth = 0;
+  bus_cfg.flags.enable_internal_pullup = 1;
   ESP_ERROR_CHECK(i2c_new_master_bus(&bus_cfg, &i2c_bus_));
 
-  esp_lcd_panel_io_i2c_config_t io_config = {
-      .dev_addr = 0x3C,
-      .on_color_trans_done = nullptr,
-      .user_ctx = nullptr,
-      .control_phase_bytes = 1,
-      .dc_bit_offset = 6,
-      .lcd_cmd_bits = 8,
-      .lcd_param_bits = 8,
-      .flags =
-          {
-              .dc_low_on_data = 0,
-              .disable_control_phase = 0,
-          },
-      .scl_speed_hz = 200 * 1000,
-  };
-
+  esp_lcd_panel_io_i2c_config_t io_config = {};
+  io_config.dev_addr = 0x3C;
+  io_config.scl_speed_hz = 200 * 1000;
+  io_config.control_phase_bytes = 1;
+  io_config.dc_bit_offset = 6;
+  io_config.lcd_cmd_bits = 8;
+  io_config.lcd_param_bits = 8;
+  io_config.flags.dc_low_on_data = 0;
+  io_config.flags.disable_control_phase = 0;
   ESP_ERROR_CHECK(
-      esp_lcd_new_panel_io_i2c_v2(i2c_bus_, &io_config, &io_handle_));
+      esp_lcd_new_panel_io_i2c(i2c_bus_, &io_config, &io_handle_));
 }
 
 void OledDisplay::flip_screen() {
@@ -96,13 +86,12 @@ void OledDisplay::flip_screen() {
 }
 
 void OledDisplay::ssd1306_init() {
-  esp_lcd_panel_dev_config_t panel_config = {
-      .reset_gpio_num = -1,
-      .bits_per_pixel = 1,
-  };
-  esp_lcd_panel_ssd1306_config_t ssd1306_config = {
-      .height = static_cast<uint8_t>(OLED_HEIGHT),
-  };
+  esp_lcd_panel_dev_config_t panel_config = {};
+  panel_config.reset_gpio_num = GPIO_NUM_NC;
+  panel_config.bits_per_pixel = 1;
+
+  esp_lcd_panel_ssd1306_config_t ssd1306_config = {};
+  ssd1306_config.height = static_cast<uint8_t>(OLED_HEIGHT);
   panel_config.vendor_config = &ssd1306_config;
 
   ESP_ERROR_CHECK(
@@ -197,12 +186,11 @@ void OledDisplay::init() {
   /* Register done callback */
   esp_lcd_panel_io_register_event_callbacks(io_handle_, &cbs, display_);
 
-  esp_timer_create_args_t timer_args = {
-      .callback = [](void *arg) { lv_tick_inc(LVGL_TICK_PERIOD_MS); },
-      .dispatch_method = ESP_TIMER_TASK,
-      .name = "lvgl_tick",
-      .skip_unhandled_events = false,
-  };
+  esp_timer_create_args_t timer_args = {};
+  timer_args.callback = [](void *arg) { lv_tick_inc(LVGL_TICK_PERIOD_MS); };
+  timer_args.dispatch_method = ESP_TIMER_TASK;
+  timer_args.name = "lvgl_tick";
+  timer_args.skip_unhandled_events = false;
   esp_timer_create(&timer_args, &lvgl_tick_timer_);
   esp_timer_start_periodic(lvgl_tick_timer_, LVGL_TICK_PERIOD_MS * 1000);
 

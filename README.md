@@ -4,16 +4,18 @@ AI Agent client powered by ESP32S3.
 
 ## Prerequisites
 
-* ESP32S3 board (PSRAM recommended)
-* ESP-IDF v5.5 configured (managed component dependencies are fetched automatically)
+* ESP32S3 board (PSRAM recommended; enable `CONFIG_SPIRAM` in menuconfig if present)
+* ESP-IDF v6.1 configured (`source ~/.espressif/tools/activate_idf_v6.1.sh` on this machine)
+* Managed component dependencies are fetched automatically
 
 ## Get started
 
 For the VS Code esp-idf extension, you must run "Set Espressif device target" to esp32s3.
-On the command line, set the target once per checkout (`sdkconfig` is gitignored):
+On the command line, set the target once per checkout (`sdkconfig` is gitignored;
+`sdkconfig.defaults` supplies the custom partition table and 8 MB flash size):
 
 ```bash
-get_idf
+source ~/.espressif/tools/activate_idf_v6.1.sh
 
 idf.py set-target esp32s3
 idf.py build

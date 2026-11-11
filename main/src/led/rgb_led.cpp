@@ -40,23 +40,18 @@ RgbLed::~RgbLed() {
 }
 
 void RgbLed::init() {
-  led_strip_config_t strip_config = {
-      .strip_gpio_num = pin_,
-      .max_leds = 1,
-      .led_model = LED_MODEL_WS2812,
-      .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB,
-  };
-  led_strip_rmt_config_t rmt_config = {
-      .resolution_hz = 10 * 1000 * 1000, // 10MHz
-      .flags =
-          {
-              // If the RMT hardware can't be assist by DMA, the driver will
-              // going into interrupt very frequently, thus result in a high CPU
-              // usage.
-              .with_dma =
-                  true, // DMA feature is available on chips like ESP32-S3/P4
-          },
-  };
+  led_strip_config_t strip_config = {};
+  strip_config.strip_gpio_num = pin_;
+  strip_config.max_leds = 1;
+  strip_config.led_model = LED_MODEL_WS2812;
+  strip_config.color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB;
+
+  led_strip_rmt_config_t rmt_config = {};
+  rmt_config.resolution_hz = 10 * 1000 * 1000; // 10MHz
+  // DMA is available on chips like ESP32-S3/P4; without it the RMT driver
+  // takes frequent interrupts and uses a lot of CPU.
+  rmt_config.flags.with_dma = true;
+
   ESP_ERROR_CHECK(
       led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip_));
   led_strip_clear(led_strip_);

@@ -1,7 +1,7 @@
 #include "audio/speaker.h"
 #include "device.h"
 
-#include <driver/i2s.h>
+#include <driver/i2s_std.h>
 #include <esp_log.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -14,7 +14,6 @@ using namespace agent;
 #define TAG "speaker"
 
 #define I2S_NUM (I2S_NUM_0)
-#define I2S_DMA_BUF_LEN (512)
 
 typedef struct {
   uint32_t sample_rate;
@@ -23,6 +22,8 @@ typedef struct {
   uint32_t data_offset;
   uint32_t data_size;
 } wav_info_t;
+
+static i2s_chan_handle_t s_tx_chan = nullptr;
 
 // Helper to read little-endian 4-byte integer
 static uint32_t read_le_uint32(FILE *f) {
@@ -79,44 +80,51 @@ static bool parse_wav_header(FILE *f, wav_info_t *info) {
   return found_fmt && found_data && audio_format == 1;
 }
 
+// (Re)create the I2S TX channel for the given format. Destroys any existing
+// channel first, since slot width/channels/sample rate are fixed per channel.
 static void i2s_configure(const wav_info_t *info) {
-  esp_err_t err = i2s_driver_uninstall(I2S_NUM);
-  if (err != ESP_OK && err != ESP_ERR_NOT_FOUND) {
-    ESP_LOGE(TAG, "Failed to uninstall I2S: %s", esp_err_to_name(err));
+  if (s_tx_chan != nullptr) {
+    i2s_channel_disable(s_tx_chan);
+    i2s_del_channel(s_tx_chan);
+    s_tx_chan = nullptr;
   }
 
-  i2s_config_t i2s_config = {
-      .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
-      .sample_rate = info->sample_rate,
-      .bits_per_sample = (info->bits_per_sample == 16)
-                             ? I2S_BITS_PER_SAMPLE_16BIT
-                             : I2S_BITS_PER_SAMPLE_8BIT,
-      .channel_format = (info->channels == 2) ? I2S_CHANNEL_FMT_RIGHT_LEFT
-                                              : I2S_CHANNEL_FMT_ONLY_LEFT,
-      .communication_format = I2S_COMM_FORMAT_I2S_MSB,
-      .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-      .dma_buf_count = 8,
-      .dma_buf_len = I2S_DMA_BUF_LEN,
+  i2s_chan_config_t chan_cfg =
+      I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM, I2S_ROLE_MASTER);
+  ESP_ERROR_CHECK(i2s_new_channel(&chan_cfg, &s_tx_chan, nullptr));
+
+  i2s_std_config_t std_cfg = {
+      .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(info->sample_rate),
+      .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(
+          (info->bits_per_sample == 16) ? I2S_DATA_BIT_WIDTH_16BIT
+                                        : I2S_DATA_BIT_WIDTH_8BIT,
+          (info->channels == 2) ? I2S_SLOT_MODE_STEREO : I2S_SLOT_MODE_MONO),
+      .gpio_cfg =
+          {
+              .mclk = I2S_GPIO_UNUSED,
+              .bclk = (gpio_num_t)SPEAKER_I2S_BCLK,
+              .ws = (gpio_num_t)SPEAKER_I2S_LRC,
+              .dout = (gpio_num_t)SPEAKER_I2S_DOUT,
+              .din = I2S_GPIO_UNUSED,
+              .invert_flags =
+                  {
+                      .mclk_inv = false,
+                      .bclk_inv = false,
+                      .ws_inv = false,
+                  },
+          },
   };
-
-  i2s_pin_config_t pin_config = {.bck_io_num = SPEAKER_I2S_BCLK,
-                                 .ws_io_num = SPEAKER_I2S_LRC,
-                                 .data_out_num = SPEAKER_I2S_DOUT,
-                                 .data_in_num = I2S_PIN_NO_CHANGE};
-
-  i2s_driver_install(I2S_NUM, &i2s_config, 0, NULL);
-  i2s_set_pin(I2S_NUM, &pin_config);
-  i2s_zero_dma_buffer(I2S_NUM);
+  ESP_ERROR_CHECK(i2s_channel_init_std_mode(s_tx_chan, &std_cfg));
+  ESP_ERROR_CHECK(i2s_channel_enable(s_tx_chan));
 }
 
 void Speaker::init_speaker() {
-  // Install the I2S TX driver with sane defaults. play_wav_file() reconfigures
-  // the driver when a file uses a different format.
-  const wav_info_t defaults = {
-      .sample_rate = 16000,
-      .bits_per_sample = 16,
-      .channels = 2,
-  };
+  // Install the I2S TX channel with sane defaults. play_wav_file() recreates
+  // the channel when a file uses a different format.
+  wav_info_t defaults = {};
+  defaults.sample_rate = 16000;
+  defaults.bits_per_sample = 16;
+  defaults.channels = 2;
   i2s_configure(&defaults);
 }
 
@@ -143,8 +151,7 @@ static void play_wav_file(const char *path) {
   // Seek to audio data
   fseek(f, info.data_offset, SEEK_SET);
 
-  const size_t buf_size =
-      I2S_DMA_BUF_LEN * ((info.bits_per_sample == 16) ? 2 : 1) * info.channels;
+  const size_t buf_size = 1024;
   uint8_t *buf = (uint8_t *)malloc(buf_size);
   if (!buf) {
     ESP_LOGE(TAG, "Buffer alloc failed");
@@ -161,23 +168,22 @@ static void play_wav_file(const char *path) {
       break;
 
     esp_err_t ret =
-        i2s_write(I2S_NUM, buf, read, &bytes_written, portMAX_DELAY);
+        i2s_channel_write(s_tx_chan, buf, read, &bytes_written, portMAX_DELAY);
 
     ESP_LOGI(TAG, "Read %zu bytes, written %zu bytes, ret=%d", read,
              bytes_written, ret);
     to_read -= read;
   }
+
+  // Flush the tail with silence so no noise is played afterwards
   vTaskDelay(100 / portTICK_PERIOD_MS);
   int16_t silence[256] = {0};
-  esp_err_t ret = i2s_write(I2S_NUM, silence, sizeof(silence), &bytes_written,
-                            portMAX_DELAY);
+  esp_err_t ret = i2s_channel_write(s_tx_chan, silence, sizeof(silence),
+                                    &bytes_written, portMAX_DELAY);
   ESP_LOGI(TAG, "written %zu silent bytes, ret=%d", bytes_written, ret);
 
   free(buf);
   fclose(f);
-
-  // make sure to clear the I2S buffer so that no noise is played after
-  i2s_zero_dma_buffer(I2S_NUM);
   ESP_LOGI(TAG, "Playback finished");
 }
 

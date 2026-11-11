@@ -1,7 +1,8 @@
 # Design Review & Refactor Proposal
 
 Scope: ESP32-S3 firmware in `main/` (reviewed at commit `aa1478e`).
-Status: Phase 0 implemented (branch `refactor/phase0-hygiene`); Phases 1-4 pending.
+Status: Phase 0 implemented on `refactor-phase0-hygiene` (includes the
+ESP-IDF 6.1 port); Phases 1-4 pending.
 
 ## 1. Summary
 
